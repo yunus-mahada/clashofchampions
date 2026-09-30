@@ -23,6 +23,7 @@ import { Haptics } from '../utils/haptics';
 interface QuestionManagerProps {
   questions: Question[];
   onUpdateQuestion: (updated: Question) => void;
+  onDeleteQuestion: (id: number) => void;
   onResetQuestions: () => void;
   onBack: () => void;
 }
@@ -30,6 +31,7 @@ interface QuestionManagerProps {
 export const QuestionManager: React.FC<QuestionManagerProps> = ({
   questions,
   onUpdateQuestion,
+  onDeleteQuestion,
   onResetQuestions,
   onBack,
 }) => {
@@ -64,10 +66,27 @@ export const QuestionManager: React.FC<QuestionManagerProps> = ({
     setFormType(q.type);
     setFormDifficulty(q.difficulty);
     setFormOptions(q.options ? [...q.options] : []);
+    // if editing a new unconfigured question with an array correctAnswer, we must clone it properly
     setFormCorrectAnswer(
       Array.isArray(q.correctAnswer) ? [...q.correctAnswer] : q.correctAnswer
     );
     setFormExplanation(q.explanation);
+  };
+
+  const handleAddNew = () => {
+    const newId = questions.length > 0 ? Math.max(...questions.map((q) => q.id)) + 1 : 1;
+    const newQ: Question = {
+      id: newId,
+      category: 'alfatihah',
+      type: 'multiple-choice',
+      question: '',
+      options: ['Pilihan A', 'Pilihan B', 'Pilihan C', 'Pilihan D'],
+      correctAnswer: 'Pilihan A',
+      explanation: '',
+      points: 100,
+      difficulty: 'easy',
+    };
+    handleStartEdit(newQ);
   };
 
   const handleCloseEdit = () => {
@@ -197,18 +216,28 @@ export const QuestionManager: React.FC<QuestionManagerProps> = ({
           </span>
         </div>
 
-        <button
-          onClick={() => {
-            audioManager.playClick();
-            Haptics.click();
-            setShowResetConfirm(true);
-          }}
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-rose-900/50 bg-rose-950/30 text-rose-300 hover:bg-rose-950/60 text-[11px] font-bold active:scale-95 transition"
-          title="Reset ke Soal Bawaan"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Reset Default</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleAddNew}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-[11px] font-bold active:scale-95 transition shadow-md shadow-emerald-500/20"
+            title="Tambah Soal Baru"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Tambah</span>
+          </button>
+          <button
+            onClick={() => {
+              audioManager.playClick();
+              Haptics.click();
+              setShowResetConfirm(true);
+            }}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-rose-900/50 bg-rose-950/30 text-rose-300 hover:bg-rose-950/60 text-[11px] font-bold active:scale-95 transition"
+            title="Reset ke Soal Bawaan"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Reset</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
@@ -367,13 +396,26 @@ export const QuestionManager: React.FC<QuestionManagerProps> = ({
                 </div>
 
                 {/* Edit Button */}
-                <div className="pt-2 flex justify-end">
+                <div className="pt-2 flex justify-between items-center border-t border-slate-800/80 mt-2">
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Yakin ingin menghapus soal ini?')) {
+                        audioManager.playClick();
+                        onDeleteQuestion(q.id);
+                        showToast(`Soal #${q.id} berhasil dihapus!`);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-950/40 text-rose-400 hover:bg-rose-950 hover:text-rose-300 text-xs font-bold transition"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Hapus</span>
+                  </button>
                   <button
                     onClick={() => handleStartEdit(q)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 text-xs font-black transition shadow-md shadow-amber-500/10"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
-                    <span>Ganti / Edit Soal</span>
+                    <span>Edit Soal</span>
                   </button>
                 </div>
               </motion.div>
@@ -450,8 +492,24 @@ export const QuestionManager: React.FC<QuestionManagerProps> = ({
                   />
                 </div>
 
-                {/* Type and Difficulty Grid */}
-                <div className="grid grid-cols-2 gap-2.5">
+                {/* Category, Type and Difficulty Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-slate-300">Kategori</label>
+                    <select
+                      value={editingQuestion.category}
+                      onChange={(e) => {
+                        const newCat = e.target.value as CategoryId;
+                        setEditingQuestion({ ...editingQuestion, category: newCat });
+                      }}
+                      className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-amber-400"
+                    >
+                      {CATEGORIES.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-bold text-slate-300">Tipe Soal</label>
                     <select

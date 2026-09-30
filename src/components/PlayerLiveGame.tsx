@@ -134,7 +134,10 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
           ).length
           : 0;
 
-        pointsEarned = Math.max(1, currentTotal - alreadyAnsweredCount);
+        // Base points + Speed Bonus
+        const basePoints = Math.max(10, (currentTotal - alreadyAnsweredCount) * 10);
+        const speedBonus = Math.max(0, 60 - Math.floor(timeTaken)); 
+        pointsEarned = basePoints + speedBonus;
       } catch {
         pointsEarned = Math.max(1, totalParticipants);
       }

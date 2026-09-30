@@ -39,6 +39,7 @@ export const GameShell: React.FC = () => {
     setShowResetConfirm,
     openQuestionManager,
     updateQuestion,
+    deleteQuestion,
     resetQuestionsToDefault,
     multiplayerRoom,
     multiplayerPlayer,
@@ -95,7 +96,7 @@ export const GameShell: React.FC = () => {
     screen === 'result';
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-slate-950 flex flex-col justify-between bg-islamic-pattern select-none">
+    <div className="relative w-screen min-h-[100dvh] bg-slate-950 flex flex-col justify-between bg-islamic-pattern select-none">
       {/* 2D Particle Background Canvas */}
       <BackgroundCanvas />
 
@@ -200,6 +201,7 @@ export const GameShell: React.FC = () => {
           <QuestionManager
             questions={questions}
             onUpdateQuestion={updateQuestion}
+            onDeleteQuestion={deleteQuestion}
             onResetQuestions={resetQuestionsToDefault}
             onBack={() => navigateTo('menu')}
           />

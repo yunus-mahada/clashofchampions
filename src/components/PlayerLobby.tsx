@@ -108,36 +108,7 @@ export const PlayerLobby: React.FC<PlayerLobbyProps> = ({
         </div>
       </motion.div>
 
-      {/* Participants Box */}
-      <div className="rounded-3xl bg-slate-900/90 border border-slate-800 p-4 shadow-xl flex flex-col gap-2 mt-auto">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
-            <Users className="w-4 h-4 text-emerald-400" />
-            <span>Peserta di Room Ini:</span>
-          </div>
-          <span className="text-xs font-bold font-mono text-amber-400">
-            {participants.length} Orang
-          </span>
-        </div>
 
-        <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto no-scrollbar pt-1">
-          {participants.map((p, idx) => (
-            <div
-              key={p.id || idx}
-              className={`flex items-center gap-2 p-2 rounded-xl text-xs truncate ${
-                p.id === player.id
-                  ? 'bg-emerald-950/40 border border-emerald-500/50 text-emerald-200 font-bold'
-                  : 'bg-slate-950/80 border border-slate-800 text-slate-300'
-              }`}
-            >
-              <span className="w-4 h-4 rounded-full bg-slate-800 text-[10px] font-bold flex items-center justify-center shrink-0">
-                {idx + 1}
-              </span>
-              <span className="truncate">{p.player_name}</span>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Synchronized 3-2-1 Countdown Overlay */}
       <CountdownOverlay count={countdown} />

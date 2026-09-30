@@ -83,7 +83,7 @@ export const Storage = {
         const raw = window.localStorage.getItem(QUESTIONS_STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length === 60) {
+          if (Array.isArray(parsed) && parsed.length > 0) {
             questionsMemoryFallback = parsed;
             return parsed;
           }
@@ -114,6 +114,13 @@ export const Storage = {
     } else {
       updatedList = [...list, updatedQ];
     }
+    this.saveQuestions(updatedList);
+    return updatedList;
+  },
+
+  deleteQuestion(id: number): Question[] {
+    const list = this.loadQuestions();
+    const updatedList = list.filter((q) => q.id !== id);
     this.saveQuestions(updatedList);
     return updatedList;
   },

@@ -224,6 +224,11 @@ export function useGameState() {
     setQuestions(nextList);
   }, []);
 
+  const deleteQuestion = useCallback((id: number) => {
+    const nextList = Storage.deleteQuestion(id);
+    setQuestions(nextList);
+  }, []);
+
   const resetQuestionsToDefault = useCallback(() => {
     const defaultList = Storage.resetQuestionsToDefault();
     setQuestions(defaultList);
@@ -544,6 +549,7 @@ export function useGameState() {
     setShowResetConfirm,
     openQuestionManager,
     updateQuestion,
+    deleteQuestion,
     resetQuestionsToDefault,
     multiplayerRoom,
     multiplayerPlayer,

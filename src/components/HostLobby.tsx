@@ -255,21 +255,28 @@ export const HostLobby: React.FC<HostLobbyProps> = ({
             <label className="text-xs font-bold text-slate-300">
               Jumlah Soal yang Dimainkan:
             </label>
-            <div className="grid grid-cols-4 gap-2">
-              {[10, 15, 30, 60].map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => setTotalQuestions(num)}
-                  className={`py-2 rounded-xl text-xs font-black transition ${
-                    totalQuestions === num
-                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/25'
-                      : 'bg-slate-950 border border-slate-800 text-slate-300 hover:text-white'
-                  }`}
-                >
-                  {num} Soal
-                </button>
-              ))}
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              {[10, 20, 40, 60, 80, 100].map((num) => {
+                const isLocked = allQuestions.length < num;
+                return (
+                  <button
+                    key={num}
+                    type="button"
+                    disabled={isLocked}
+                    onClick={() => setTotalQuestions(num)}
+                    className={`py-2 rounded-xl text-xs font-black transition ${
+                      isLocked
+                        ? 'bg-slate-900 border border-slate-800 text-slate-600 opacity-50 cursor-not-allowed'
+                        : totalQuestions === num
+                        ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/25'
+                        : 'bg-slate-950 border border-slate-800 text-slate-300 hover:text-white'
+                    }`}
+                  >
+                    {num} Soal
+                    {isLocked && <span className="block text-[8px] text-rose-400 mt-0.5">Terkunci</span>}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
