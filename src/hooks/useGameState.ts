@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { CategoryId, GameState, QuestionProgress, PersistedGameData, Question } from '../types/game';
-import { QuizRoom, QuizPlayer } from '../utils/supabase';
+import { QuizRoom, QuizPlayer, supabase } from '../utils/supabase';
 import { Storage } from '../utils/storage';
 import { audioManager } from '../game/AudioManager';
 import { particleSystem } from '../game/ParticleSystem';
@@ -73,6 +73,30 @@ export function useGameState() {
       window.history.replaceState({ screen: 'menu', step: 0 }, '', window.location.href);
       window.history.pushState({ screen: 'menu', step: 1 }, '', window.location.href);
     } catch {}
+
+    // Auto Reconnect Host
+    const checkHostSession = async () => {
+      const hostSession = localStorage.getItem('mahada_host_session');
+      if (hostSession && !localStorage.getItem('mahada_player_session')) {
+        try {
+          const storedRoom = JSON.parse(hostSession);
+          if (storedRoom && storedRoom.room_code) {
+             const { data } = await supabase.from('quiz_rooms').select('*').eq('room_code', storedRoom.room_code).single();
+             if (data) {
+                setMultiplayerRoom(data);
+                const nextScreen = data.status === 'waiting' ? 'host-lobby' : 'host-scoreboard';
+                setScreen(nextScreen);
+                window.history.replaceState({ screen: nextScreen, step: 1 }, '', window.location.href);
+             } else {
+                localStorage.removeItem('mahada_host_session');
+             }
+          }
+        } catch (e) {
+          localStorage.removeItem('mahada_host_session');
+        }
+      }
+    };
+    checkHostSession();
 
     const handlePopState = () => {
       // 1. If any modal is open, close it first instead of navigating
@@ -248,14 +272,19 @@ export function useGameState() {
     navigateTo('multiplayer-menu');
   }, [navigateTo]);
 
-  const startHostLobby = useCallback(() => {
+  const startHostLobby = useCallback((room?: QuizRoom) => {
     audioManager.playClick();
     Haptics.click();
+    if (room) {
+      setMultiplayerRoom(room);
+      localStorage.setItem('mahada_host_session', JSON.stringify(room));
+    }
     navigateTo('host-lobby');
   }, [navigateTo]);
 
   const startHostScoreboard = useCallback((room: QuizRoom) => {
     setMultiplayerRoom(room);
+    localStorage.setItem('mahada_host_session', JSON.stringify(room));
     navigateTo('host-scoreboard');
   }, [navigateTo]);
 
@@ -289,6 +318,8 @@ export function useGameState() {
     setMultiplayerRoom(null);
     setMultiplayerPlayer(null);
     setMultiplayerFinalResult(null);
+    localStorage.removeItem('mahada_host_session');
+    localStorage.removeItem('mahada_player_session');
     navigateTo('menu');
   }, [navigateTo]);
 

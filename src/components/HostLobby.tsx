@@ -23,12 +23,14 @@ import { Haptics } from '../utils/haptics';
 import { multiplayerService } from '../services/multiplayerService';
 
 interface HostLobbyProps {
+  initialRoom?: QuizRoom | null;
   allQuestions: Question[];
   onStartScoreboard: (room: QuizRoom) => void;
   onBack: () => void;
 }
 
 export const HostLobby: React.FC<HostLobbyProps> = ({
+  initialRoom,
   allQuestions,
   onStartScoreboard,
   onBack,
@@ -46,16 +48,20 @@ export const HostLobby: React.FC<HostLobbyProps> = ({
   const [players, setPlayers] = useState<QuizPlayer[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
-  const [roomCreated, setRoomCreated] = useState(false);
-  const [activeRoom, setActiveRoom] = useState<QuizRoom | null>(null);
+  const [roomCreated, setRoomCreated] = useState(!!initialRoom);
+  const [activeRoom, setActiveRoom] = useState<QuizRoom | null>(initialRoom || null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
   const [showSqlModal, setShowSqlModal] = useState(false);
 
   // Initialize room code
   useEffect(() => {
-    setRoomCode(generateRoomCode());
-  }, []);
+    if (!initialRoom) {
+      setRoomCode(generateRoomCode());
+    } else {
+      setRoomCode(initialRoom.room_code);
+    }
+  }, [initialRoom]);
 
   // Subscribe to players joining room via WebSocket service
   useEffect(() => {
@@ -119,6 +125,7 @@ export const HostLobby: React.FC<HostLobbyProps> = ({
 
       setActiveRoom(newRoom);
       setRoomCreated(true);
+      localStorage.setItem('mahada_host_session', JSON.stringify(newRoom));
       audioManager.playCorrect();
       Haptics.correct();
     } catch (err: any) {
