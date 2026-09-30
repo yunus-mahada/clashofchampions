@@ -62,16 +62,29 @@ create table if not exists public.quiz_players (
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
--- 3. Kebijakan Keamanan RLS
+-- 3. Buat Tabel Log Jawaban (Untuk Skor Grid)
+create table if not exists public.quiz_answers (
+  id uuid default gen_random_uuid() primary key,
+  room_code text not null references public.quiz_rooms(room_code) on delete cascade,
+  player_id text not null,
+  question_id int not null,
+  is_correct boolean not null,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- 4. Kebijakan Keamanan RLS
 alter table public.quiz_rooms enable row level security;
 alter table public.quiz_players enable row level security;
+alter table public.quiz_answers enable row level security;
 
 create policy "Publik bebas buat & baca room" on public.quiz_rooms for all using (true) with check (true);
 create policy "Publik bebas gabung & update player" on public.quiz_players for all using (true) with check (true);
+create policy "Publik bebas akses answers" on public.quiz_answers for all using (true) with check (true);
 
--- 4. Aktifkan Fitur Realtime WebSocket
+-- 5. Aktifkan Fitur Realtime WebSocket
 alter publication supabase_realtime add table public.quiz_rooms;
 alter publication supabase_realtime add table public.quiz_players;
+alter publication supabase_realtime add table public.quiz_answers;
 `;
 
 export function generateRoomCode(): string {

@@ -121,20 +121,33 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
     if (isCorrect) {
       // Perhitungan skor adu cepat & benar
       try {
-        const { data: currentPlayers } = await supabase
-          .from('quiz_players')
-          .select('id, current_question, correct_count')
-          .eq('room_code', room.room_code);
+        // 1. Insert jawaban benar ke tabel quiz_answers untuk tracking spesifik per soal
+        const { data: answerData, error } = await supabase
+          .from('quiz_answers')
+          .insert([{
+            room_code: room.room_code,
+            player_id: player.id,
+            question_id: currentQ.id,
+            is_correct: true
+          }])
+          .select()
+          .single();
 
-        const currentTotal = Math.max(currentPlayers?.length || 1, totalParticipants, 1);
+        if (error) throw error;
 
-        const alreadyAnsweredCount = currentPlayers
-          ? currentPlayers.filter(
-            (p) => p.id !== player.id && p.current_question >= answeredIds.length + 1
-          ).length
-          : 0;
+        // 2. Hitung berapa orang yang sudah menjawab BENAR untuk soal INI sebelum pemain ini
+        const { count } = await supabase
+          .from('quiz_answers')
+          .select('*', { count: 'exact', head: true })
+          .eq('room_code', room.room_code)
+          .eq('question_id', currentQ.id)
+          .eq('is_correct', true)
+          .lt('created_at', answerData.created_at);
 
-        // Base points based on order: 1st gets 20, 2nd gets 19, etc.
+        const currentTotal = Math.max(totalParticipants, 1);
+        const alreadyAnsweredCount = count || 0;
+
+        // Base points based on order: 1st gets 10, 2nd gets 9, etc.
         const basePoints = Math.max(1, currentTotal - alreadyAnsweredCount);
         // Fractional speed bonus just to act as tie-breaker for same position
         const speedFraction = Math.max(0, 60 - timeTaken) / 1000; 
