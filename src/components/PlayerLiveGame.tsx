@@ -134,10 +134,11 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
           ).length
           : 0;
 
-        // Base points + Speed Bonus
-        const basePoints = Math.max(10, (currentTotal - alreadyAnsweredCount) * 10);
-        const speedBonus = Math.max(0, 60 - Math.floor(timeTaken)); 
-        pointsEarned = basePoints + speedBonus;
+        // Base points based on order: 1st gets 20, 2nd gets 19, etc.
+        const basePoints = Math.max(1, currentTotal - alreadyAnsweredCount);
+        // Fractional speed bonus just to act as tie-breaker for same position
+        const speedFraction = Math.max(0, 60 - timeTaken) / 1000; 
+        pointsEarned = basePoints + speedFraction;
       } catch {
         pointsEarned = Math.max(1, totalParticipants);
       }
@@ -165,7 +166,7 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
       wrongCount: nextWrong,
       currentQuestion: nextQuestionNum,
       playerName: player.player_name,
-      pointsEarned,
+      pointsEarned: Math.floor(pointsEarned),
       isFinished: false,
     });
   };

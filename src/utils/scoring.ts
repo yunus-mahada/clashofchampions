@@ -48,5 +48,5 @@ export function getChampionRank(score: number): ChampionRank {
 }
 
 export function formatScore(score: number): string {
-  return new Intl.NumberFormat('id-ID').format(score);
+  return new Intl.NumberFormat('id-ID').format(Math.floor(score));
 }
