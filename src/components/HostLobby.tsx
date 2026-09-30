@@ -155,15 +155,15 @@ export const HostLobby: React.FC<HostLobbyProps> = ({
       // 1. Synchronized 3-2-1 Countdown Sequence
       setCountdown(3);
       await multiplayerService.broadcastCountdown(activeRoom.room_code, 3);
-      await new Promise((r) => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 4000));
 
       setCountdown(2);
       await multiplayerService.broadcastCountdown(activeRoom.room_code, 2);
-      await new Promise((r) => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 4000));
 
       setCountdown(1);
       await multiplayerService.broadcastCountdown(activeRoom.room_code, 1);
-      await new Promise((r) => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 4000));
 
       setCountdown(0);
       await multiplayerService.broadcastCountdown(activeRoom.room_code, 0);

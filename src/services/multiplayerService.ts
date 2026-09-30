@@ -454,6 +454,22 @@ export class MultiplayerService {
         };
       }
 
+      // Check if player already exists in this room with this name
+      const { data: existingPlayer } = await supabase
+        .from('quiz_players')
+        .select('*')
+        .eq('room_code', formattedCode)
+        .eq('player_name', cleanName)
+        .maybeSingle();
+
+      if (existingPlayer) {
+        return {
+          room: roomData as QuizRoom,
+          player: existingPlayer as QuizPlayer,
+          error: null,
+        };
+      }
+
       // 2. Register participant
       const { data: playerData, error: playerError } = await supabase
         .from('quiz_players')

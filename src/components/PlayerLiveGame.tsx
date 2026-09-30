@@ -37,10 +37,16 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
   }, [room, allQuestions]);
 
   const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(null);
-  const [answeredIds, setAnsweredIds] = useState<number[]>([]);
-  const [score, setScore] = useState(0);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [wrongCount, setWrongCount] = useState(0);
+  const [answeredIds, setAnsweredIds] = useState<number[]>(() => {
+    // Resume previous progress if player reconnects
+    if (player.current_question > 0) {
+      return allQuestions.slice(0, player.current_question).map(q => q.id);
+    }
+    return [];
+  });
+  const [score, setScore] = useState(player.score || 0);
+  const [correctCount, setCorrectCount] = useState(player.correct_count || 0);
+  const [wrongCount, setWrongCount] = useState(player.wrong_count || 0);
   const [isAnswered, setIsAnswered] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [timeUpNotice, setTimeUpNotice] = useState(false);
@@ -210,7 +216,7 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
             <p className="text-xs text-slate-400 mt-1">Pilih kategori & soal yang ingin dijawab.</p>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 max-w-sm mx-auto w-full">
             {roomQuestions.map((q, idx) => {
               const isAnsweredQ = answeredIds.includes(q.id);
               return (
@@ -222,19 +228,15 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
                     Haptics.click();
                     setSelectedQuestionId(q.id);
                   }}
-                  className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center gap-1.5 transition-all ${
+                  className={`aspect-square rounded-2xl border text-center flex flex-col items-center justify-center transition-all ${
                     isAnsweredQ
-                      ? 'bg-slate-800/50 border-slate-750 text-slate-500 cursor-not-allowed opacity-50'
+                      ? 'bg-slate-800/50 border-slate-750 text-slate-600 cursor-not-allowed opacity-40'
                       : 'bg-slate-900 border-amber-500/40 hover:bg-slate-800 active:scale-95 shadow-md shadow-amber-500/10'
                   }`}
                 >
-                  <span className={`text-[10px] font-black uppercase tracking-wider ${isAnsweredQ ? 'text-slate-500' : 'text-amber-500'}`}>
-                    {q.category === 'alfatihah' ? 'Al-Fatihah' : q.category === 'shalat' ? 'Shalat' : q.category === 'kisah' ? 'Kisah Nabi' : 'Umum'}
+                  <span className={`text-2xl font-black ${isAnsweredQ ? 'text-slate-600' : 'text-slate-200'}`}>
+                    {idx + 1}
                   </span>
-                  <span className={`text-sm font-black ${isAnsweredQ ? 'text-slate-500' : 'text-slate-200'}`}>
-                    Soal {idx + 1}
-                  </span>
-                  {isAnsweredQ && <Check className="w-5 h-5 text-emerald-500 mt-1" />}
                 </button>
               );
             })}
