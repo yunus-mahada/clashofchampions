@@ -1,0 +1,6 @@
+{
+  "name": "Clash of Champions — Islamic Quiz Odyssey",
+  "description": "Game kuis kompetisi edukatif Islam: Asah Ilmu, Uji Ingatan, Jadilah Champion! 60 soal dalam 4 kategori dengan sistem skor, combo, audio synthesizer, dan efek visual 2D.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

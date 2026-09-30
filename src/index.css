@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --sat: env(safe-area-inset-top, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    touch-action: pan-y pinch-zoom;
+    background-color: #020617;
+    color: #f8fafc;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+}
+
+/* Safe area padding utilities for iPhone notch / Dynamic Island & Android nav bar */
+.pt-safe {
+  padding-top: max(8px, env(safe-area-inset-top, 0px));
+}
+.pb-safe {
+  padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+}
+.pl-safe {
+  padding-left: max(8px, env(safe-area-inset-left, 0px));
+}
+.pr-safe {
+  padding-right: max(8px, env(safe-area-inset-right, 0px));
+}
+
+/* Mobile-first touch action for scrolling containers */
+.overflow-y-auto {
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.font-cinzel {
+  font-family: 'Cinzel', serif, Georgia;
+}
+
+.font-arabic {
+  font-family: 'Amiri', 'Traditional Arabic', serif;
+}
+
+/* Custom scrollbar for question card lists if overflow in small screens */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Islamic geometric subtle background pattern */
+.bg-islamic-pattern {
+  background-image: radial-gradient(rgba(245, 158, 11, 0.08) 1px, transparent 1px),
+    radial-gradient(rgba(56, 189, 248, 0.06) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: 0 0, 16px 16px;
+}

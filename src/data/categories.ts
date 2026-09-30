@@ -1,0 +1,48 @@
+import { CategoryInfo } from '../types/game';
+
+export const CATEGORIES: CategoryInfo[] = [
+  {
+    id: 'alfatihah',
+    number: '01',
+    name: 'Bedah Surat Al-Fatihah',
+    icon: '🕌',
+    description: 'Uji pemahamanmu tentang Surat Al-Fatihah, ayat, arti, susunan, dan kandungan dasarnya.',
+    totalQuestions: 15,
+    gradient: 'from-amber-500/20 via-yellow-600/10 to-slate-900',
+    borderGlow: 'border-amber-500/40 hover:border-amber-400',
+    accentColor: '#f59e0b',
+  },
+  {
+    id: 'shalat',
+    number: '02',
+    name: 'Bacaan Shalat',
+    icon: '🧎',
+    description: 'Seberapa baik kamu mengenal bacaan ruku, sujud, tasyahud, dan urutan dalam ibadah shalat?',
+    totalQuestions: 15,
+    gradient: 'from-emerald-500/20 via-teal-600/10 to-slate-900',
+    borderGlow: 'border-emerald-500/40 hover:border-emerald-400',
+    accentColor: '#10b981',
+  },
+  {
+    id: 'kisah',
+    number: '03',
+    name: 'Kisah',
+    icon: '📖',
+    description: 'Tantang ingatanmu tentang kisah para nabi, rasul, sahabat, dan pelajaran berharga dalam sejarah Islam.',
+    totalQuestions: 15,
+    gradient: 'from-sky-500/20 via-blue-600/10 to-slate-900',
+    borderGlow: 'border-sky-500/40 hover:border-sky-400',
+    accentColor: '#0ea5e9',
+  },
+  {
+    id: 'umum',
+    number: '04',
+    name: 'Pengetahuan Umum',
+    icon: '🧠',
+    description: 'Uji wawasanmu dengan pertanyaan pengetahuan umum Islam yang ringan, edukatif, dan menantang.',
+    totalQuestions: 15,
+    gradient: 'from-violet-500/20 via-purple-600/10 to-slate-900',
+    borderGlow: 'border-violet-500/40 hover:border-violet-400',
+    accentColor: '#8b5cf6',
+  },
+];

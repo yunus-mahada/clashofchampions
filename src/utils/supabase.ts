@@ -1,0 +1,98 @@
+import { supabase, getSupabaseUrl, SUPABASE_ANON_KEY } from '../services/supabaseClient';
+
+export { supabase, getSupabaseUrl, SUPABASE_ANON_KEY };
+
+export interface QuizRoom {
+  id?: string;
+  room_code: string;
+  host_id: string;
+  total_questions: number;
+  duration_minutes?: number; // 10, 20, 30, 40, 50, 60 minutes
+  started_at?: string | null;
+  categories: string[];
+  status: 'waiting' | 'playing' | 'finished';
+  question_ids: number[];
+  created_at?: string;
+}
+
+export interface QuizPlayer {
+  id: string;
+  room_code: string;
+  player_name: string;
+  score: number;
+  correct_count: number;
+  wrong_count: number;
+  current_question: number;
+  is_finished: boolean;
+  finished_at?: string | null;
+  created_at?: string;
+}
+
+export const SUPABASE_SETUP_SQL = `-- JALANKAN INI DI SUPABASE DASHBOARD -> SQL EDITOR:
+
+-- 1. Buat Tabel Ruangan Kuis
+create table if not exists public.quiz_rooms (
+  id uuid default gen_random_uuid() primary key,
+  room_code text unique not null,
+  host_id text not null,
+  total_questions int default 15,
+  duration_minutes int default 20,
+  started_at timestamp with time zone,
+  categories text[] default array['alfatihah','shalat','kisah','umum'],
+  status text default 'waiting', -- 'waiting' | 'playing' | 'finished'
+  question_ids int[] default array[]::int[],
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- Tambahkan kolom duration_minutes dan started_at jika tabel sudah ada sebelumnya
+alter table public.quiz_rooms add column if not exists duration_minutes int default 20;
+alter table public.quiz_rooms add column if not exists started_at timestamp with time zone;
+
+-- 2. Buat Tabel Peserta Kuis
+create table if not exists public.quiz_players (
+  id uuid default gen_random_uuid() primary key,
+  room_code text not null references public.quiz_rooms(room_code) on delete cascade,
+  player_name text not null,
+  score int default 0,
+  correct_count int default 0,
+  wrong_count int default 0,
+  current_question int default 0,
+  is_finished boolean default false,
+  finished_at timestamp with time zone,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+-- 3. Kebijakan Keamanan RLS
+alter table public.quiz_rooms enable row level security;
+alter table public.quiz_players enable row level security;
+
+create policy "Publik bebas buat & baca room" on public.quiz_rooms for all using (true) with check (true);
+create policy "Publik bebas gabung & update player" on public.quiz_players for all using (true) with check (true);
+
+-- 4. Aktifkan Fitur Realtime WebSocket
+alter publication supabase_realtime add table public.quiz_rooms;
+alter publication supabase_realtime add table public.quiz_players;
+`;
+
+export function generateRoomCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let result = 'COC-';
+  for (let i = 0; i < 4; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+export function getOrCreatePlayerId(): string {
+  try {
+    const key = 'clash_champions_player_id';
+    let id = localStorage.getItem(key);
+    if (!id) {
+      id = 'user_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+      localStorage.setItem(key, id);
+    }
+    return id;
+  } catch {
+    return 'user_' + Math.random().toString(36).substring(2, 9);
+  }
+}

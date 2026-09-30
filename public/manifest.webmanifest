@@ -1,0 +1,19 @@
+{
+  "name": "Clash of Champions",
+  "short_name": "ClashChamp",
+  "description": "Islamic Knowledge Challenge - Asah Ilmu, Uji Ingatan, Jadilah Champion!",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "theme_color": "#0f172a",
+  "background_color": "#020617",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
