@@ -39,12 +39,12 @@ export const QuestionScreen: React.FC<QuestionScreenProps> = ({
   const [timeTaken, setTimeTaken] = useState<number>(0);
 
   const handleTimerTick = (timeLeft: number) => {
-    setTimeTaken(30 - timeLeft);
+    setTimeTaken(60 - timeLeft);
   };
 
   const handleTimerExpire = () => {
     if (isAnswered) return;
-    onAnswer(false, 30, 'Waktu Habis');
+    onAnswer(false, 60, 'Waktu Habis');
   };
 
   const handleMultipleChoiceSelect = (selected: string) => {
@@ -109,7 +109,7 @@ export const QuestionScreen: React.FC<QuestionScreenProps> = ({
         {/* Delta-time timer */}
         {!isAnswered && (
           <Timer
-            duration={30}
+            duration={60}
             isPaused={isPaused}
             onExpire={handleTimerExpire}
             onTick={handleTimerTick}

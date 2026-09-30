@@ -18,7 +18,8 @@
   html, body {
     height: 100%;
     width: 100%;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     touch-action: pan-y pinch-zoom;
     background-color: #020617;
     color: #f8fafc;
