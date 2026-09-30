@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Smartphone, User, KeyRound, AlertCircle, LogIn, Sparkles } from 'lucide-react';
 import { BackButton } from './BackButton';
@@ -21,6 +21,65 @@ export const PlayerJoin: React.FC<PlayerJoinProps> = ({ onJoinSuccess, onBack })
   const avatars = ['🦁', '🦅', '🌟', '🏹', '⚔️', '⚡', '🌙', '🕌'];
   const [selectedAvatar, setSelectedAvatar] = useState('🌟');
 
+  useEffect(() => {
+    const session = localStorage.getItem('mahada_player_session');
+    if (session) {
+      try {
+        const parsed = JSON.parse(session);
+        if (parsed.roomCode && parsed.playerName && parsed.avatar) {
+          setRoomCode(parsed.roomCode);
+          setPlayerName(parsed.playerName);
+          setSelectedAvatar(parsed.avatar);
+          // Auto attempt to reconnect
+          performJoin(parsed.roomCode, parsed.playerName, parsed.avatar, true);
+        }
+      } catch (e) {
+        localStorage.removeItem('mahada_player_session');
+      }
+    }
+  }, []);
+
+  const performJoin = async (code: string, name: string, avatar: string, isAuto = false) => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    
+    if (!isAuto) {
+      audioManager.playClick();
+      Haptics.click();
+    }
+
+    try {
+      const fullDisplayName = `${avatar} ${name}`;
+      const result = await multiplayerService.joinRoom(code, fullDisplayName);
+
+      if (result.error || !result.room || !result.player) {
+        setErrorMessage(result.error || 'Gagal bergabung ke room.');
+        setIsLoading(false);
+        if (isAuto) {
+          localStorage.removeItem('mahada_player_session');
+          setErrorMessage('Sesi sebelumnya sudah tidak valid. Silakan masukkan ulang.');
+        }
+        return;
+      }
+
+      if (!isAuto) {
+        audioManager.playCorrect();
+        Haptics.correct();
+      }
+      
+      localStorage.setItem('mahada_player_session', JSON.stringify({
+        roomCode: code,
+        playerName: name,
+        avatar: avatar
+      }));
+
+      onJoinSuccess(result.room, result.player);
+    } catch (err: any) {
+      setErrorMessage('Koneksi terputus. Pastikan internet aktif dan coba lagi.');
+      setIsLoading(false);
+    }
+  };
+
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -37,27 +96,7 @@ export const PlayerJoin: React.FC<PlayerJoinProps> = ({ onJoinSuccess, onBack })
       return;
     }
 
-    setIsLoading(true);
-    audioManager.playClick();
-    Haptics.click();
-
-    try {
-      const fullDisplayName = `${selectedAvatar} ${cleanName}`;
-      const result = await multiplayerService.joinRoom(formattedCode, fullDisplayName);
-
-      if (result.error || !result.room || !result.player) {
-        setErrorMessage(result.error || 'Gagal bergabung ke room.');
-        setIsLoading(false);
-        return;
-      }
-
-      audioManager.playCorrect();
-      Haptics.correct();
-      onJoinSuccess(result.room, result.player);
-    } catch (err: any) {
-      setErrorMessage('Koneksi terputus. Pastikan internet aktif dan coba lagi.');
-      setIsLoading(false);
-    }
+    performJoin(formattedCode, cleanName, selectedAvatar);
   };
 
   return (
