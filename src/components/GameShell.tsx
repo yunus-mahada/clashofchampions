@@ -96,7 +96,7 @@ export const GameShell: React.FC = () => {
     screen === 'result';
 
   return (
-    <div className="relative w-screen min-h-[100dvh] bg-slate-950 flex flex-col justify-between bg-islamic-pattern select-none">
+    <div className="relative w-screen h-[100dvh] overflow-hidden bg-slate-950 flex flex-col justify-between bg-islamic-pattern select-none">
       {/* 2D Particle Background Canvas */}
       <BackgroundCanvas />
 
@@ -122,7 +122,7 @@ export const GameShell: React.FC = () => {
       )}
 
       {/* Screen Router */}
-      <main className="flex-1 w-full flex flex-col overflow-hidden relative z-20">
+      <main className="flex-1 w-full flex flex-col min-h-0 relative z-20">
         {screen === 'menu' && (
           <MainMenu
             highScore={data.highScore}
