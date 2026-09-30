@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase, QuizRoom, QuizPlayer } from '../utils/supabase';
 import { Question } from '../types/game';
@@ -35,7 +36,8 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
     return allQuestions.slice(0, room.total_questions || 15);
   }, [room, allQuestions]);
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(null);
+  const [answeredIds, setAnsweredIds] = useState<number[]>([]);
   const [score, setScore] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCount, setWrongCount] = useState(0);
@@ -53,7 +55,7 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
       score,
       correctCount,
       wrongCount,
-      currentQuestion: currentIndex + 1,
+      currentQuestion: answeredIds.length + 1,
       playerName: player.player_name,
       pointsEarned: 0,
       isFinished: true,
@@ -62,7 +64,7 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
     setTimeout(() => {
       onFinish(score, correctCount, wrongCount);
     }, 1500);
-  }, [player.id, player.player_name, room.room_code, score, correctCount, wrongCount, currentIndex, onFinish]);
+  }, [player.id, player.player_name, room.room_code, score, correctCount, wrongCount, answeredIds.length, onFinish]);
 
   const {
     players: livePlayers,
@@ -82,7 +84,7 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
   });
 
   const totalParticipants = livePlayers.length > 0 ? livePlayers.length : 1;
-  const currentQ = roomQuestions[currentIndex];
+  const currentQ = selectedQuestionId ? roomQuestions.find(q => q.id === selectedQuestionId) : null;
   const total = roomQuestions.length;
 
   const formatTime = (seconds: number) => {
@@ -106,7 +108,7 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
     multiplayerService.broadcastAnswerSubmitted(room.room_code, {
       playerId: player.id,
       playerName: player.player_name,
-      questionIndex: currentIndex,
+      questionIndex: answeredIds.length,
       isCorrect,
     });
 
@@ -122,8 +124,8 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
 
         const alreadyAnsweredCount = currentPlayers
           ? currentPlayers.filter(
-              (p) => p.id !== player.id && p.current_question >= currentIndex + 1
-            ).length
+            (p) => p.id !== player.id && p.current_question >= answeredIds.length + 1
+          ).length
           : 0;
 
         pointsEarned = Math.max(1, currentTotal - alreadyAnsweredCount);
@@ -137,7 +139,8 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
     const nextScore = score + pointsEarned;
     const nextCorrect = correctCount + (isCorrect ? 1 : 0);
     const nextWrong = wrongCount + (isCorrect ? 0 : 1);
-    const nextQuestionNum = currentIndex + 1;
+    const nextQuestionNum = answeredIds.length + 1;
+    setAnsweredIds(prev => currentQ ? [...prev, currentQ.id] : prev);
 
     setScore(nextScore);
     setCorrectCount(nextCorrect);
@@ -162,7 +165,7 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
     audioManager.playClick();
     Haptics.click();
 
-    if (currentIndex + 1 >= total) {
+    if (answeredIds.length >= total) {
       // Selesai seluruh soal dalam room
       audioManager.playGameComplete();
       Haptics.celebrate();
@@ -182,18 +185,88 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
     }
 
     setIsAnswered(false);
-    setCurrentIndex((prev) => prev + 1);
+    setSelectedQuestionId(null);
   };
 
-  if (!currentQ) return null;
+  // --- Grid Selection Screen ---
+  if (!currentQ) {
+    return (
+      <div className="flex-1 w-full flex flex-col overflow-y-auto no-scrollbar relative z-10 pb-10">
+        <MultiplayerHUD
+          room={room}
+          player={player}
+          currentIndex={answeredIds.length}
+          totalQuestions={total}
+          remainingSeconds={remainingSeconds}
+          totalParticipants={totalParticipants}
+          connectionStatus={connectionStatus}
+          isSyncing={isSyncing}
+          onExitRequest={onLeave ? () => setShowExitConfirm(true) : undefined}
+        />
 
+        <div className="flex-1 px-4 py-6 flex flex-col">
+          <div className="mb-5 text-center">
+            <h3 className="text-lg font-black text-amber-400 font-cinzel">PILIH SOAL BERIKUTNYA</h3>
+            <p className="text-xs text-slate-400 mt-1">Pilih kategori & soal yang ingin dijawab.</p>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {roomQuestions.map((q, idx) => {
+              const isAnsweredQ = answeredIds.includes(q.id);
+              return (
+                <button
+                  key={q.id}
+                  disabled={isAnsweredQ}
+                  onClick={() => {
+                    audioManager.playClick();
+                    Haptics.click();
+                    setSelectedQuestionId(q.id);
+                  }}
+                  className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center gap-1.5 transition-all ${
+                    isAnsweredQ
+                      ? 'bg-slate-800/50 border-slate-750 text-slate-500 cursor-not-allowed opacity-50'
+                      : 'bg-slate-900 border-amber-500/40 hover:bg-slate-800 active:scale-95 shadow-md shadow-amber-500/10'
+                  }`}
+                >
+                  <span className={`text-[10px] font-black uppercase tracking-wider ${isAnsweredQ ? 'text-slate-500' : 'text-amber-500'}`}>
+                    {q.category === 'alfatihah' ? 'Al-Fatihah' : q.category === 'shalat' ? 'Shalat' : q.category === 'kisah' ? 'Kisah Nabi' : 'Umum'}
+                  </span>
+                  <span className={`text-sm font-black ${isAnsweredQ ? 'text-slate-500' : 'text-slate-200'}`}>
+                    Soal {idx + 1}
+                  </span>
+                  {isAnsweredQ && <Check className="w-5 h-5 text-emerald-500 mt-1" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {showExitConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+            <div className="w-full max-w-sm rounded-3xl bg-slate-900 border border-slate-750 p-6 shadow-2xl flex flex-col gap-4 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 mx-auto flex items-center justify-center text-xl font-bold">⚠️</div>
+              <h3 className="text-base font-black text-slate-100">Keluar dari Pertandingan?</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">Jawabanmu yang sudah tersimpan akan tetap terhitung di papan skor Host.</p>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <button type="button" onClick={() => setShowExitConfirm(false)} className="min-h-[44px] py-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 text-xs font-bold active:scale-95 transition">Tetap Lanjut</button>
+                <button type="button" onClick={() => { setShowExitConfirm(false); onLeave?.(); }} className="min-h-[44px] py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold active:scale-95 transition">Ya, Keluar</button>
+              </div>
+            </div>
+          </div>
+        )}
+        <CountdownOverlay count={countdown} />
+      </div>
+    );
+  }
+
+  // --- Active Question Screen ---
   return (
-    <div className="flex-1 w-full flex flex-col justify-between overflow-hidden relative z-10">
+    <div className="flex-1 w-full flex flex-col justify-between overflow-y-auto no-scrollbar relative z-10">
       {/* Top Status Bar: Managed via MultiplayerHUD */}
       <MultiplayerHUD
         room={room}
         player={player}
-        currentIndex={currentIndex}
+        currentIndex={answeredIds.length}
         totalQuestions={total}
         remainingSeconds={remainingSeconds}
         totalParticipants={totalParticipants}
