@@ -227,6 +227,7 @@ export const GameShell: React.FC = () => {
         {screen === 'host-scoreboard' && multiplayerRoom && (
           <HostScoreboard
             room={multiplayerRoom}
+            allQuestions={questions}
             onExit={leaveMultiplayer}
           />
         )}

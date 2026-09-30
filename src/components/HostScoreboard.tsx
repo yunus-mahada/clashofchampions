@@ -16,8 +16,9 @@ import {
   Zap,
 } from 'lucide-react';
 import { BackButton } from './BackButton';
-import { QuizRoom, QuizPlayer } from '../utils/supabase';
+import { QuizRoom, QuizPlayer, supabase } from '../utils/supabase';
 import { formatScore } from '../utils/scoring';
+import { Question } from '../types/game';
 import { particleSystem } from '../game/ParticleSystem';
 import { audioManager } from '../game/AudioManager';
 import { Haptics } from '../utils/haptics';
@@ -25,10 +26,11 @@ import { useMultiplayerRoom } from '../hooks/useMultiplayerRoom';
 
 interface HostScoreboardProps {
   room: QuizRoom;
+  allQuestions: Question[];
   onExit: () => void;
 }
 
-export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, onExit }) => {
+export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestions, onExit }) => {
   const [isFinished, setIsFinished] = useState(room.status === 'finished');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const prevLeaderIdRef = useRef<string | null>(null);
@@ -92,6 +94,49 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, onExit }) 
   const others = players.slice(3);
 
   const latestScoreEvent = recentScoreEvents[0];
+
+  const roomQuestions = room.question_ids && room.question_ids.length > 0
+    ? room.question_ids.map(id => allQuestions.find(q => q.id === id)!).filter(Boolean)
+    : allQuestions.slice(0, room.total_questions || 15);
+
+  const [reportQuestionNum, setReportQuestionNum] = useState<number | null>(null);
+  const [reportData, setReportData] = useState<{ playerName: string, points: number, order: number }[]>([]);
+  const [isLoadingReport, setIsLoadingReport] = useState(false);
+
+  const openReport = async (qId: number, qNum: number) => {
+    setReportQuestionNum(qNum);
+    setIsLoadingReport(true);
+    setReportData([]);
+    audioManager.playClick();
+    
+    try {
+      const { data, error } = await supabase
+        .from('quiz_answers')
+        .select('player_id, created_at')
+        .eq('room_code', room.room_code)
+        .eq('question_id', qId)
+        .eq('is_correct', true)
+        .order('created_at', { ascending: true });
+        
+      if (!error && data) {
+        const totalParticipants = Math.max(players.length, 1);
+        const mappedData = data.map((d, index) => {
+           const p = players.find(x => x.id === d.player_id);
+           const points = Math.max(1, totalParticipants - index);
+           return {
+             playerName: p ? p.player_name : 'Pemain Anonim',
+             points,
+             order: index + 1
+           };
+        });
+        setReportData(mappedData);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingReport(false);
+    }
+  };
 
   return (
     <div className="flex-1 w-full max-w-4xl mx-auto flex flex-col justify-between p-4 sm:p-6 overflow-y-auto no-scrollbar relative z-10">
@@ -383,6 +428,87 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, onExit }) 
           })
         )}
       </div>
+
+      {/* Per-Question Report Trigger Row */}
+      <div className="mt-2 pt-4 border-t border-slate-800 shrink-0">
+        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1 block mb-2">
+          Laporan Jawaban Per Soal:
+        </span>
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 px-1">
+          {roomQuestions.map((q, idx) => (
+            <button
+              key={q.id}
+              onClick={() => openReport(q.id, idx + 1)}
+              className="flex-shrink-0 w-10 h-10 rounded-xl bg-slate-900 border border-slate-750 flex flex-col items-center justify-center hover:bg-slate-800 hover:border-emerald-500/50 active:scale-95 transition"
+              title={`Lihat Siapa yang Menjawab Soal No. ${idx + 1}`}
+            >
+              <span className="text-xs font-black text-slate-300">{idx + 1}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Report Modal */}
+      <AnimatePresence>
+        {reportQuestionNum !== null && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-sm rounded-3xl bg-slate-900 border border-slate-750 p-5 shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
+                <h3 className="text-sm font-black text-slate-100 uppercase tracking-wide">
+                  Hasil Soal No. {reportQuestionNum}
+                </h3>
+                <button
+                  onClick={() => {
+                    audioManager.playClick();
+                    setReportQuestionNum(null);
+                  }}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition active:scale-95"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto no-scrollbar py-3 flex flex-col gap-2">
+                {isLoadingReport ? (
+                  <div className="text-center text-slate-500 text-xs py-6 animate-pulse font-medium">
+                    Memuat data...
+                  </div>
+                ) : reportData.length === 0 ? (
+                  <div className="text-center text-slate-500 text-xs py-6 font-medium">
+                    Belum ada yang menjawab benar.
+                  </div>
+                ) : (
+                  reportData.map((d) => (
+                    <div key={d.order} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className={`flex items-center justify-center w-6 h-6 rounded-lg text-[10px] font-black shrink-0 ${
+                          d.order === 1 ? 'bg-amber-400 text-slate-900' :
+                          d.order === 2 ? 'bg-slate-300 text-slate-900' :
+                          d.order === 3 ? 'bg-amber-700 text-white' :
+                          'bg-slate-700 text-slate-300'
+                        }`}>
+                          {d.order}
+                        </span>
+                        <span className="text-xs font-bold text-slate-200 truncate">
+                          {d.playerName}
+                        </span>
+                      </div>
+                      <span className="text-xs font-black font-mono text-emerald-400 shrink-0">
+                        +{d.points} PT
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
