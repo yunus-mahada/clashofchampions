@@ -10,7 +10,25 @@ import { calculateQuestionScore } from '../utils/scoring';
 export function useGameState() {
   const [data, setData] = useState<PersistedGameData>(() => Storage.load());
   const [questions, setQuestions] = useState<Question[]>(() => Storage.loadQuestions());
-  const [screen, setScreen] = useState<GameState>('menu');
+  const [screen, setScreen] = useState<GameState>(() => {
+    try {
+      const playerSession = localStorage.getItem('mahada_player_session');
+      if (playerSession) {
+        const pData = JSON.parse(playerSession);
+        if (pData?.room?.status === 'finished') return 'player-live-finish';
+        if (pData?.room?.status === 'playing') return 'player-live-game';
+        if (pData?.room?.status === 'waiting') return 'player-lobby';
+      }
+
+      const hostSession = localStorage.getItem('mahada_host_session');
+      if (hostSession) {
+        const hData = JSON.parse(hostSession);
+        if (hData?.status === 'waiting') return 'host-lobby';
+        return 'host-scoreboard';
+      }
+    } catch (e) {}
+    return 'menu';
+  });
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -46,8 +64,23 @@ export function useGameState() {
   const [currentQuestionId, setCurrentQuestionId] = useState<number | null>(null);
 
   // Multiplayer Live Room State
-  const [multiplayerRoom, setMultiplayerRoom] = useState<QuizRoom | null>(null);
-  const [multiplayerPlayer, setMultiplayerPlayer] = useState<QuizPlayer | null>(null);
+  const [multiplayerRoom, setMultiplayerRoom] = useState<QuizRoom | null>(() => {
+    try {
+      const playerSession = localStorage.getItem('mahada_player_session');
+      if (playerSession) return JSON.parse(playerSession).room;
+      
+      const hostSession = localStorage.getItem('mahada_host_session');
+      if (hostSession) return JSON.parse(hostSession);
+    } catch (e) {}
+    return null;
+  });
+  const [multiplayerPlayer, setMultiplayerPlayer] = useState<QuizPlayer | null>(() => {
+    try {
+      const playerSession = localStorage.getItem('mahada_player_session');
+      if (playerSession) return JSON.parse(playerSession).player;
+    } catch (e) {}
+    return null;
+  });
   const [multiplayerFinalResult, setMultiplayerFinalResult] = useState<{
     finalScore: number;
     correctCount: number;
