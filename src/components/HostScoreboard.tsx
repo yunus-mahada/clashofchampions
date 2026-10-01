@@ -23,7 +23,7 @@ import { particleSystem } from '../game/ParticleSystem';
 import { audioManager } from '../game/AudioManager';
 import { Haptics } from '../utils/haptics';
 import { useMultiplayerRoom } from '../hooks/useMultiplayerRoom';
-import { getAvatar } from '../utils/avatars';
+import { getAvatar, getNameWithoutAvatar } from '../utils/avatars';
 
 interface HostScoreboardProps {
   room: QuizRoom;
@@ -164,7 +164,7 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
              correctOrder++;
            }
            return {
-             playerName: p ? p.player_name : 'Pemain Anonim',
+             playerName: p ? getNameWithoutAvatar(p.player_name) : 'Pemain Anonim',
              points,
              order,
              isCorrect: d.is_correct
@@ -256,7 +256,7 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
           >
             <div className="flex items-center gap-1.5 truncate">
               <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0 fill-amber-400" />
-              <span className="font-bold">{latestScoreEvent.playerName}</span>
+              <span className="font-bold">{getNameWithoutAvatar(latestScoreEvent.playerName)}</span>
               <span className="text-slate-400 text-[11px]">menjawab soal {latestScoreEvent.currentQuestion}:</span>
             </div>
             <span className="font-mono font-black text-emerald-400 shrink-0">
@@ -295,7 +295,7 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
                       <Crown className="w-6 h-6 text-amber-400 animate-bounce absolute -top-4" />
                       <div className="absolute -top-2 -right-2 flex items-center justify-center rounded-full font-black shadow-md w-7 h-7 bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 text-xs shadow-amber-500/40">1</div>
                       <div className="text-4xl mb-1 leading-none filter drop-shadow-md">{getAvatar(players[0].player_name || players[0].id)}</div>
-                      <span className="font-black truncate w-full text-center text-[11px] text-amber-200 tracking-wide">{players[0].player_name}</span>
+                      <span className="font-black truncate w-full text-center text-[11px] text-amber-200 tracking-wide">{getNameWithoutAvatar(players[0].player_name)}</span>
                       <span className="font-black font-mono mt-auto text-[10px] text-amber-300 bg-black/30 px-2 py-0.5 rounded-full">{formatScore(players[0].score)}</span>
                     </motion.div>
                   )}
@@ -308,7 +308,7 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
                       <motion.div layout key={players[1].id} className="flex flex-col items-center justify-center p-1.5 rounded-2xl border-2 shadow-md relative w-20 h-20 bg-gradient-to-t from-slate-900 via-slate-850 to-slate-800 border-slate-300/60">
                         <div className="absolute -top-2 -left-2 flex items-center justify-center rounded-full font-black shadow-md w-5 h-5 bg-slate-200 text-slate-900 text-[10px]">2</div>
                         <div className="text-3xl mb-1 leading-none">{getAvatar(players[1].player_name || players[1].id)}</div>
-                        <span className="font-black truncate w-full text-center text-[10px] text-slate-100">{players[1].player_name}</span>
+                        <span className="font-black truncate w-full text-center text-[10px] text-slate-100">{getNameWithoutAvatar(players[1].player_name)}</span>
                         <span className="font-black font-mono mt-auto text-[9px] text-slate-300">{formatScore(players[1].score)}</span>
                       </motion.div>
                     )}
@@ -316,7 +316,7 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
                       <motion.div layout key={players[2].id} className="flex flex-col items-center justify-center p-1.5 rounded-2xl border-2 shadow-md relative w-20 h-20 bg-gradient-to-t from-slate-900 via-slate-850 to-slate-800 border-amber-700/60">
                         <div className="absolute -top-2 -right-2 flex items-center justify-center rounded-full font-black shadow-md w-5 h-5 bg-amber-600 text-white text-[10px]">3</div>
                         <div className="text-3xl mb-1 leading-none">{getAvatar(players[2].player_name || players[2].id)}</div>
-                        <span className="font-black truncate w-full text-center text-[10px] text-slate-100">{players[2].player_name}</span>
+                        <span className="font-black truncate w-full text-center text-[10px] text-slate-100">{getNameWithoutAvatar(players[2].player_name)}</span>
                         <span className="font-black font-mono mt-auto text-[9px] text-amber-600/90">{formatScore(players[2].score)}</span>
                       </motion.div>
                     )}
@@ -333,7 +333,7 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
                         <motion.div layout key={p.id} className="flex flex-col items-center justify-center p-1.5 rounded-xl border border-slate-700/80 shadow-sm relative w-[4.25rem] h-[4.25rem] bg-slate-800/80">
                           <div className="absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full font-bold shadow-sm w-4 h-4 bg-slate-700 text-slate-300 text-[8px]">{idx + 1}</div>
                           <div className="text-2xl mb-1 leading-none">{getAvatar(p.player_name || p.id)}</div>
-                          <span className="font-bold truncate w-full text-center text-[9px] text-slate-300">{p.player_name}</span>
+                          <span className="font-bold truncate w-full text-center text-[9px] text-slate-300">{getNameWithoutAvatar(p.player_name)}</span>
                         </motion.div>
                       );
                     })}
@@ -350,7 +350,7 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
                         <motion.div layout key={p.id} className="flex flex-col items-center justify-center p-1 rounded-xl border border-slate-800/80 relative w-[3.75rem] h-[3.75rem] bg-slate-900/90">
                           <div className="absolute -top-1 -right-1 flex items-center justify-center rounded-full font-bold w-3.5 h-3.5 bg-slate-800 text-slate-400 text-[7px]">{idx + 1}</div>
                           <div className="text-xl mb-0.5 leading-none">{getAvatar(p.player_name || p.id)}</div>
-                          <span className="font-medium truncate w-full text-center text-[8px] text-slate-400">{p.player_name}</span>
+                          <span className="font-medium truncate w-full text-center text-[8px] text-slate-400">{getNameWithoutAvatar(p.player_name)}</span>
                         </motion.div>
                       );
                     })}
@@ -410,9 +410,9 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
                  const remaining = (room.total_questions || 15) - answered;
                  return (
                    <div key={p.id} className="flex items-center p-2 rounded-xl bg-slate-800/40 border border-slate-700/50 text-xs hover:bg-slate-800/80 transition-colors">
-                     <div className="w-1/3 font-semibold text-slate-200 truncate px-1 flex items-center gap-1.5" title={p.player_name}>
+                     <div className="w-1/3 font-semibold text-slate-200 truncate px-1 flex items-center gap-1.5" title={getNameWithoutAvatar(p.player_name)}>
                        <span className="text-sm leading-none shrink-0">{getAvatar(p.player_name || p.id)}</span>
-                       <span className="truncate">{p.player_name}</span>
+                       <span className="truncate">{getNameWithoutAvatar(p.player_name)}</span>
                      </div>
                      <div className="w-2/3 flex items-center justify-between px-1">
                        <div className="w-1/4 text-center font-bold text-emerald-400">{p.correct_count}</div>

@@ -151,6 +151,7 @@ export const HostLobby: React.FC<HostLobbyProps> = ({
   };
 
   const [showVideo, setShowVideo] = useState(false);
+  const proceedCalledRef = useRef(false);
 
   const handleStartGame = () => {
     if (!activeRoom) return;
@@ -161,7 +162,8 @@ export const HostLobby: React.FC<HostLobbyProps> = ({
   };
 
   const proceedWithCountdown = async () => {
-    if (!activeRoom) return;
+    if (!activeRoom || proceedCalledRef.current) return;
+    proceedCalledRef.current = true;
     setShowVideo(false);
 
     try {
@@ -492,6 +494,9 @@ export const HostLobby: React.FC<HostLobbyProps> = ({
 
       {/* Synchronized 3-2-1 Countdown Overlay */}
       <CountdownOverlay count={countdown} />
+
+      {/* Preload video in background to prevent black screen delay */}
+      <video src="/opening.mp4" preload="auto" className="hidden" muted />
 
       <SqlSetupModal isOpen={showSqlModal} onClose={() => setShowSqlModal(false)} />
     </div>

@@ -107,15 +107,6 @@ export const MainMenu: React.FC<MainMenuProps> = ({
           </p>
         </div>
 
-        {/* 3 Pillars Key Stats */}
-        <div className="flex items-center justify-center gap-3 mt-4 px-4 py-2 rounded-2xl bg-slate-900/80 border border-slate-800 text-[11px] font-bold text-slate-300 tracking-wider">
-          <span className="text-amber-400">60 SOAL</span>
-          <span className="text-slate-600">·</span>
-          <span className="text-emerald-400">4 KATEGORI</span>
-          <span className="text-slate-600">·</span>
-          <span className="text-sky-400">1 CHAMPION</span>
-        </div>
-
         {/* Rekor Saya / High Score Box */}
         <div className="mt-3.5 px-5 py-2.5 rounded-2xl bg-slate-950/70 border border-slate-800/80 flex items-center gap-3">
           <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/15 text-amber-400">

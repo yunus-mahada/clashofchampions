@@ -257,23 +257,26 @@ export const QuestionManager: React.FC<QuestionManagerProps> = ({
           >
             Semua ({questions.length})
           </button>
-          {CATEGORIES.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => {
-                audioManager.playClick();
-                setSelectedCat(c.id);
-              }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1.5 transition ${
-                selectedCat === c.id
-                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                  : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <span>{c.icon}</span>
-              <span>{c.name.replace('Bedah Surat ', '')}</span>
-            </button>
-          ))}
+          {CATEGORIES.map((c) => {
+            const count = questions.filter((q) => q.category === c.id).length;
+            return (
+              <button
+                key={c.id}
+                onClick={() => {
+                  audioManager.playClick();
+                  setSelectedCat(c.id);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1.5 transition ${
+                  selectedCat === c.id
+                    ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                    : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span>{c.icon}</span>
+                <span>{c.name.replace('Bedah Surat ', '')} ({count})</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Search input */}

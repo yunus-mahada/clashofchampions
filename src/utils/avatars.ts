@@ -15,3 +15,14 @@ export function getAvatar(name: string) {
   }
   return animals[Math.abs(hash) % animals.length];
 }
+
+export function getNameWithoutAvatar(name: string) {
+  if (!name) return name;
+  const firstChar = name.trim().split(' ')[0];
+  if (animals.some(animal => firstChar.includes(animal) || name.startsWith(animal))) {
+    const parts = name.trim().split(' ');
+    parts.shift();
+    return parts.join(' ');
+  }
+  return name;
+}
