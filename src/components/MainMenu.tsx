@@ -91,7 +91,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
         {/* Title */}
         <div className="flex flex-col items-center">
           <span className="text-[11px] font-black tracking-[0.3em] uppercase text-amber-400 mb-1">
-            2D ODYSSEY CHALLENGE
+            MAHADA CHALLENGE
           </span>
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white font-cinzel leading-none">
             CLASH OF

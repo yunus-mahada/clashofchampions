@@ -102,6 +102,39 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
   const [reportQuestionNum, setReportQuestionNum] = useState<number | null>(null);
   const [reportData, setReportData] = useState<{ playerName: string, points: number, order: number }[]>([]);
   const [isLoadingReport, setIsLoadingReport] = useState(false);
+  const [answeredCounts, setAnsweredCounts] = useState<Record<number, number>>({});
+
+  useEffect(() => {
+    const fetchAnswerCounts = async () => {
+      if (!room.room_code) return;
+      try {
+        const { data, error } = await supabase
+          .from('quiz_answers')
+          .select('question_id, player_id')
+          .eq('room_code', room.room_code);
+          
+        if (!error && data) {
+          const counts: Record<number, Set<string>> = {};
+          data.forEach((d: any) => {
+            if (!counts[d.question_id]) {
+              counts[d.question_id] = new Set();
+            }
+            counts[d.question_id].add(d.player_id);
+          });
+          
+          const finalCounts: Record<number, number> = {};
+          Object.keys(counts).forEach(k => {
+            finalCounts[Number(k)] = counts[Number(k)].size;
+          });
+          setAnsweredCounts(finalCounts);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    
+    fetchAnswerCounts();
+  }, [room.room_code, recentScoreEvents]);
 
   const openReport = async (qId: number, qNum: number) => {
     setReportQuestionNum(qNum);
@@ -435,16 +468,23 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
           Laporan Jawaban Per Soal:
         </span>
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 px-1">
-          {roomQuestions.map((q, idx) => (
-            <button
-              key={q.id}
-              onClick={() => openReport(q.id, idx + 1)}
-              className="flex-shrink-0 w-10 h-10 rounded-xl bg-slate-900 border border-slate-750 flex flex-col items-center justify-center hover:bg-slate-800 hover:border-emerald-500/50 active:scale-95 transition"
-              title={`Lihat Siapa yang Menjawab Soal No. ${idx + 1}`}
-            >
-              <span className="text-xs font-black text-slate-300">{idx + 1}</span>
-            </button>
-          ))}
+          {roomQuestions.map((q, idx) => {
+            const isAllAnswered = players.length > 0 && answeredCounts[q.id] >= players.length;
+            return (
+              <button
+                key={q.id}
+                onClick={() => openReport(q.id, idx + 1)}
+                className={`flex-shrink-0 w-10 h-10 rounded-xl border flex flex-col items-center justify-center active:scale-95 transition ${
+                  isAllAnswered 
+                    ? 'bg-amber-400 border-amber-300 shadow-md shadow-amber-500/20' 
+                    : 'bg-slate-900 border-slate-750 hover:bg-slate-800 hover:border-emerald-500/50'
+                }`}
+                title={`Lihat Siapa yang Menjawab Soal No. ${idx + 1}`}
+              >
+                <span className={`text-xs font-black ${isAllAnswered ? 'text-slate-900' : 'text-slate-300'}`}>{idx + 1}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

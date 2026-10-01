@@ -39,6 +39,11 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
   const [selectedQuestionId, setSelectedQuestionId] = useState<number | null>(null);
   const [answeredIds, setAnsweredIds] = useState<number[]>(() => {
     // Resume previous progress if player reconnects
+    try {
+      const saved = localStorage.getItem(`room_${room.room_code}_answeredIds`);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+
     if (player.current_question > 0) {
       return allQuestions.slice(0, player.current_question).map(q => q.id);
     }
@@ -118,23 +123,22 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
       isCorrect,
     });
 
-    if (isCorrect) {
-      // Perhitungan skor adu cepat & benar
-      try {
-        // 1. Insert jawaban benar ke tabel quiz_answers untuk tracking spesifik per soal
-        const { data: answerData, error } = await supabase
-          .from('quiz_answers')
-          .insert([{
-            room_code: room.room_code,
-            player_id: player.id,
-            question_id: currentQ.id,
-            is_correct: true
-          }])
-          .select()
-          .single();
+    try {
+      // 1. Insert jawaban ke tabel quiz_answers untuk tracking spesifik per soal
+      const { data: answerData, error } = await supabase
+        .from('quiz_answers')
+        .insert([{
+          room_code: room.room_code,
+          player_id: player.id,
+          question_id: currentQ.id,
+          is_correct: isCorrect
+        }])
+        .select()
+        .single();
 
-        if (error) throw error;
+      if (error) throw error;
 
+      if (isCorrect) {
         // 2. Hitung berapa orang yang sudah menjawab BENAR untuk soal INI sebelum pemain ini
         const { count } = await supabase
           .from('quiz_answers')
@@ -152,18 +156,22 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
         // Fractional speed bonus just to act as tie-breaker for same position
         const speedFraction = Math.max(0, 60 - timeTaken) / 1000; 
         pointsEarned = basePoints + speedFraction;
-      } catch {
+      }
+    } catch {
+      if (isCorrect) {
         pointsEarned = Math.max(1, totalParticipants);
       }
-    } else {
-      pointsEarned = 0;
     }
 
     const nextScore = score + pointsEarned;
     const nextCorrect = correctCount + (isCorrect ? 1 : 0);
     const nextWrong = wrongCount + (isCorrect ? 0 : 1);
     const nextQuestionNum = answeredIds.length + 1;
-    setAnsweredIds(prev => currentQ ? [...prev, currentQ.id] : prev);
+    setAnsweredIds(prev => {
+      const updated = currentQ ? [...prev, currentQ.id] : prev;
+      localStorage.setItem(`room_${room.room_code}_answeredIds`, JSON.stringify(updated));
+      return updated;
+    });
 
     setScore(nextScore);
     setCorrectCount(nextCorrect);
