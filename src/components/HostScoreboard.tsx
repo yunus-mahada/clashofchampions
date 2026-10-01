@@ -23,6 +23,7 @@ import { particleSystem } from '../game/ParticleSystem';
 import { audioManager } from '../game/AudioManager';
 import { Haptics } from '../utils/haptics';
 import { useMultiplayerRoom } from '../hooks/useMultiplayerRoom';
+import { getAvatar } from '../utils/avatars';
 
 interface HostScoreboardProps {
   room: QuizRoom;
@@ -100,7 +101,7 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
     : allQuestions.slice(0, room.total_questions || 15);
 
   const [reportQuestionNum, setReportQuestionNum] = useState<number | null>(null);
-  const [reportData, setReportData] = useState<{ playerName: string, points: number, order: number }[]>([]);
+  const [reportData, setReportData] = useState<{ playerName: string, points: number, order: number, isCorrect: boolean }[]>([]);
   const [isLoadingReport, setIsLoadingReport] = useState(false);
   const [answeredCounts, setAnsweredCounts] = useState<Record<number, number>>({});
 
@@ -145,21 +146,28 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
     try {
       const { data, error } = await supabase
         .from('quiz_answers')
-        .select('player_id, created_at')
+        .select('player_id, created_at, is_correct')
         .eq('room_code', room.room_code)
         .eq('question_id', qId)
-        .eq('is_correct', true)
         .order('created_at', { ascending: true });
         
       if (!error && data) {
         const totalParticipants = Math.max(players.length, 1);
+        let correctOrder = 1;
         const mappedData = data.map((d, index) => {
            const p = players.find(x => x.id === d.player_id);
-           const points = Math.max(1, totalParticipants - index);
+           let points = 0;
+           let order = 0;
+           if (d.is_correct) {
+             points = Math.max(1, totalParticipants - (correctOrder - 1));
+             order = correctOrder;
+             correctOrder++;
+           }
            return {
              playerName: p ? p.player_name : 'Pemain Anonim',
              points,
-             order: index + 1
+             order,
+             isCorrect: d.is_correct
            };
         });
         setReportData(mappedData);
@@ -265,79 +273,93 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
         <div className="w-full lg:w-2/5 flex flex-col min-h-0">
           <div className="flex items-center justify-between mb-2 shrink-0">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-1">
-              Top 10 Leaderboard:
+              Top 10 Pohon Leaderboard:
             </span>
           </div>
 
-          <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-2 pb-4 pr-1">
-            {/* Podium for Top 3 */}
-            {top3.length > 0 && (
-              <div className="grid grid-cols-3 gap-2 mb-2 items-end shrink-0">
-                {/* Rank 2 (Silver) */}
-                {top3[1] ? (
-                  <motion.div
-                    layout
-                    className="flex flex-col items-center p-2 rounded-2xl bg-gradient-to-t from-slate-900 via-slate-850 to-slate-800 border-2 border-slate-400/50 text-center shadow-md"
-                  >
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-300 text-slate-950 font-black text-xs mb-1">2</div>
-                    <span className="text-[11px] font-black text-slate-100 truncate w-full">{top3[1].player_name}</span>
-                    <span className="text-sm font-black font-mono text-slate-300">{formatScore(top3[1].score)}</span>
-                  </motion.div>
-                ) : <div />}
-
-                {/* Rank 1 (Gold Champion) */}
-                {top3[0] && (
-                  <motion.div
-                    layout
-                    className="flex flex-col items-center p-3 rounded-2xl bg-gradient-to-t from-amber-950/60 via-amber-900/30 to-amber-800/40 border-2 border-amber-400 text-center shadow-lg z-10 relative"
-                  >
-                    <Crown className="w-5 h-5 text-amber-400 animate-bounce absolute -top-2.5" />
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 font-black text-sm mb-1 shadow-md shadow-amber-500/40">1</div>
-                    <span className="text-xs font-black text-amber-200 truncate w-full">{top3[0].player_name}</span>
-                    <span className="text-base font-black font-mono text-amber-300">{formatScore(top3[0].score)}</span>
-                  </motion.div>
+          <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col items-center pt-3 pb-8 relative w-full">
+            {/* Background Pine Tree Glow */}
+            <div className="absolute inset-0 bg-gradient-to-b from-emerald-900/10 via-emerald-950/5 to-transparent pointer-events-none rounded-t-[100px] w-full" />
+            
+            {players.length > 0 ? (
+              <div className="flex flex-col items-center justify-start gap-3 w-full relative z-10">
+                
+                {/* Level 1: Rank 1 */}
+                <div className="flex items-center justify-center w-full">
+                  {players[0] && (
+                    <motion.div
+                      layout
+                      key={players[0].id}
+                      className="flex flex-col items-center justify-center p-2 rounded-[1.25rem] border-2 shadow-lg relative w-24 h-24 bg-gradient-to-t from-amber-950/80 via-amber-900/40 to-amber-800/50 border-amber-400"
+                    >
+                      <Crown className="w-6 h-6 text-amber-400 animate-bounce absolute -top-4" />
+                      <div className="absolute -top-2 -right-2 flex items-center justify-center rounded-full font-black shadow-md w-7 h-7 bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 text-xs shadow-amber-500/40">1</div>
+                      <div className="text-4xl mb-1 leading-none filter drop-shadow-md">{getAvatar(players[0].player_name || players[0].id)}</div>
+                      <span className="font-black truncate w-full text-center text-[11px] text-amber-200 tracking-wide">{players[0].player_name}</span>
+                      <span className="font-black font-mono mt-auto text-[10px] text-amber-300 bg-black/30 px-2 py-0.5 rounded-full">{formatScore(players[0].score)}</span>
+                    </motion.div>
+                  )}
+                </div>
+                
+                {/* Level 2: Rank 2, 3 */}
+                {(players[1] || players[2]) && (
+                  <div className="flex items-center justify-center gap-5 w-full mt-1">
+                    {players[1] && (
+                      <motion.div layout key={players[1].id} className="flex flex-col items-center justify-center p-1.5 rounded-2xl border-2 shadow-md relative w-20 h-20 bg-gradient-to-t from-slate-900 via-slate-850 to-slate-800 border-slate-300/60">
+                        <div className="absolute -top-2 -left-2 flex items-center justify-center rounded-full font-black shadow-md w-5 h-5 bg-slate-200 text-slate-900 text-[10px]">2</div>
+                        <div className="text-3xl mb-1 leading-none">{getAvatar(players[1].player_name || players[1].id)}</div>
+                        <span className="font-black truncate w-full text-center text-[10px] text-slate-100">{players[1].player_name}</span>
+                        <span className="font-black font-mono mt-auto text-[9px] text-slate-300">{formatScore(players[1].score)}</span>
+                      </motion.div>
+                    )}
+                    {players[2] && (
+                      <motion.div layout key={players[2].id} className="flex flex-col items-center justify-center p-1.5 rounded-2xl border-2 shadow-md relative w-20 h-20 bg-gradient-to-t from-slate-900 via-slate-850 to-slate-800 border-amber-700/60">
+                        <div className="absolute -top-2 -right-2 flex items-center justify-center rounded-full font-black shadow-md w-5 h-5 bg-amber-600 text-white text-[10px]">3</div>
+                        <div className="text-3xl mb-1 leading-none">{getAvatar(players[2].player_name || players[2].id)}</div>
+                        <span className="font-black truncate w-full text-center text-[10px] text-slate-100">{players[2].player_name}</span>
+                        <span className="font-black font-mono mt-auto text-[9px] text-amber-600/90">{formatScore(players[2].score)}</span>
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Level 3: Rank 4, 5, 6 */}
+                {(players[3] || players[4] || players[5]) && (
+                  <div className="flex items-center justify-center gap-3 w-full mt-1">
+                    {[3, 4, 5].map(idx => {
+                      const p = players[idx];
+                      if (!p) return null;
+                      return (
+                        <motion.div layout key={p.id} className="flex flex-col items-center justify-center p-1.5 rounded-xl border border-slate-700/80 shadow-sm relative w-[4.25rem] h-[4.25rem] bg-slate-800/80">
+                          <div className="absolute -top-1.5 -right-1.5 flex items-center justify-center rounded-full font-bold shadow-sm w-4 h-4 bg-slate-700 text-slate-300 text-[8px]">{idx + 1}</div>
+                          <div className="text-2xl mb-1 leading-none">{getAvatar(p.player_name || p.id)}</div>
+                          <span className="font-bold truncate w-full text-center text-[9px] text-slate-300">{p.player_name}</span>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+                
+                {/* Level 4: Rank 7, 8, 9, 10 */}
+                {(players[6] || players[7] || players[8] || players[9]) && (
+                  <div className="flex items-center justify-center gap-2 w-full mt-1">
+                    {[6, 7, 8, 9].map(idx => {
+                      const p = players[idx];
+                      if (!p) return null;
+                      return (
+                        <motion.div layout key={p.id} className="flex flex-col items-center justify-center p-1 rounded-xl border border-slate-800/80 relative w-[3.75rem] h-[3.75rem] bg-slate-900/90">
+                          <div className="absolute -top-1 -right-1 flex items-center justify-center rounded-full font-bold w-3.5 h-3.5 bg-slate-800 text-slate-400 text-[7px]">{idx + 1}</div>
+                          <div className="text-xl mb-0.5 leading-none">{getAvatar(p.player_name || p.id)}</div>
+                          <span className="font-medium truncate w-full text-center text-[8px] text-slate-400">{p.player_name}</span>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
                 )}
 
-                {/* Rank 3 (Bronze) */}
-                {top3[2] ? (
-                  <motion.div
-                    layout
-                    className="flex flex-col items-center p-2 rounded-2xl bg-gradient-to-t from-slate-900 via-slate-850 to-slate-800 border-2 border-amber-700/50 text-center shadow-md"
-                  >
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-700 text-white font-black text-xs mb-1">3</div>
-                    <span className="text-[11px] font-black text-slate-100 truncate w-full">{top3[2].player_name}</span>
-                    <span className="text-sm font-black font-mono text-amber-400">{formatScore(top3[2].score)}</span>
-                  </motion.div>
-                ) : <div />}
               </div>
-            )}
-
-            {/* List for Top 4 - 10 */}
-            {players.slice(3, 10).map((p, idx) => {
-              const rank = idx + 4;
-              return (
-                <motion.div
-                  key={p.id}
-                  layout
-                  className="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/80"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-slate-800 text-slate-400 font-mono text-xs font-black shrink-0">
-                      {rank}
-                    </span>
-                    <span className="text-xs font-bold text-slate-200 truncate">
-                      {p.player_name}
-                    </span>
-                  </div>
-                  <span className="text-xs font-black font-mono text-amber-300 shrink-0">
-                    {formatScore(p.score)} PT
-                  </span>
-                </motion.div>
-              );
-            })}
-            
-            {players.length === 0 && (
-               <div className="p-8 text-center text-slate-500 text-xs">Menunggu data peserta...</div>
+            ) : (
+               <div className="p-8 text-center text-slate-500 text-xs relative z-10">Menunggu data peserta...</div>
             )}
           </div>
         </div>
@@ -388,8 +410,9 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
                  const remaining = (room.total_questions || 15) - answered;
                  return (
                    <div key={p.id} className="flex items-center p-2 rounded-xl bg-slate-800/40 border border-slate-700/50 text-xs hover:bg-slate-800/80 transition-colors">
-                     <div className="w-1/3 font-semibold text-slate-200 truncate px-1" title={p.player_name}>
-                       {p.player_name}
+                     <div className="w-1/3 font-semibold text-slate-200 truncate px-1 flex items-center gap-1.5" title={p.player_name}>
+                       <span className="text-sm leading-none shrink-0">{getAvatar(p.player_name || p.id)}</span>
+                       <span className="truncate">{p.player_name}</span>
                      </div>
                      <div className="w-2/3 flex items-center justify-between px-1">
                        <div className="w-1/4 text-center font-bold text-emerald-400">{p.correct_count}</div>
@@ -469,26 +492,35 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
                   </div>
                 ) : reportData.length === 0 ? (
                   <div className="text-center text-slate-500 text-xs py-6 font-medium">
-                    Belum ada yang menjawab benar.
+                    Belum ada yang menjawab soal ini.
                   </div>
                 ) : (
-                  reportData.map((d) => (
-                    <div key={d.order} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                  reportData.map((d, i) => (
+                    <div key={i} className={`flex items-center justify-between p-2.5 rounded-xl border ${d.isCorrect ? 'bg-slate-800/50 border-slate-700/50' : 'bg-rose-950/20 border-rose-900/30'}`}>
                       <div className="flex items-center gap-3 min-w-0">
-                        <span className={`flex items-center justify-center w-6 h-6 rounded-lg text-[10px] font-black shrink-0 ${
-                          d.order === 1 ? 'bg-amber-400 text-slate-900' :
-                          d.order === 2 ? 'bg-slate-300 text-slate-900' :
-                          d.order === 3 ? 'bg-amber-700 text-white' :
-                          'bg-slate-700 text-slate-300'
-                        }`}>
-                          {d.order}
+                        {d.isCorrect ? (
+                          <span className={`flex items-center justify-center w-6 h-6 rounded-lg text-[10px] font-black shrink-0 ${
+                            d.order === 1 ? 'bg-amber-400 text-slate-900' :
+                            d.order === 2 ? 'bg-slate-300 text-slate-900' :
+                            d.order === 3 ? 'bg-amber-700 text-white' :
+                            'bg-slate-700 text-slate-300'
+                          }`}>
+                            {d.order}
+                          </span>
+                        ) : (
+                          <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-rose-500/20 text-rose-500 shrink-0">
+                            <X className="w-4 h-4" />
+                          </span>
+                        )}
+                        <span className="text-sm leading-none shrink-0 ml-1">
+                          {getAvatar(d.playerName)}
                         </span>
-                        <span className="text-xs font-bold text-slate-200 truncate">
+                        <span className={`text-xs font-bold truncate ${d.isCorrect ? 'text-slate-200' : 'text-rose-400/80'}`}>
                           {d.playerName}
                         </span>
                       </div>
-                      <span className="text-xs font-black font-mono text-emerald-400 shrink-0">
-                        +{d.points} PT
+                      <span className={`text-xs font-black font-mono shrink-0 ${d.isCorrect ? 'text-emerald-400' : 'text-rose-500'}`}>
+                        {d.isCorrect ? `+${d.points} PT` : '0 PT'}
                       </span>
                     </div>
                   ))

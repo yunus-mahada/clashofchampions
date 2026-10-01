@@ -94,6 +94,16 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
     },
   });
 
+  // Sync local score with DB if player refreshed and lost local state
+  useEffect(() => {
+    const liveMe = livePlayers.find(p => p.id === player.id);
+    if (liveMe && !isAnswered && !isSyncing) {
+      if (liveMe.score > score) setScore(liveMe.score);
+      if (liveMe.correct_count > correctCount) setCorrectCount(liveMe.correct_count);
+      if (liveMe.wrong_count > wrongCount) setWrongCount(liveMe.wrong_count);
+    }
+  }, [livePlayers, player.id, isAnswered, isSyncing, score, correctCount, wrongCount]);
+
   const totalParticipants = livePlayers.length > 0 ? livePlayers.length : 1;
   const currentQ = selectedQuestionId ? roomQuestions.find(q => q.id === selectedQuestionId) : null;
   const total = roomQuestions.length;
@@ -190,6 +200,21 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
       pointsEarned: Math.floor(pointsEarned),
       isFinished: false,
     });
+
+    // Update local storage session so a refresh doesn't reset score to 0
+    const sessionStr = localStorage.getItem('mahada_player_session');
+    if (sessionStr) {
+      try {
+        const session = JSON.parse(sessionStr);
+        if (session.player) {
+          session.player.score = nextScore;
+          session.player.correct_count = nextCorrect;
+          session.player.wrong_count = nextWrong;
+          session.player.current_question = nextQuestionNum;
+          localStorage.setItem('mahada_player_session', JSON.stringify(session));
+        }
+      } catch (e) {}
+    }
   };
 
   const handleNext = async () => {
