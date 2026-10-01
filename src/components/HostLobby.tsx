@@ -150,11 +150,19 @@ export const HostLobby: React.FC<HostLobbyProps> = ({
     });
   };
 
-  const handleStartGame = async () => {
+  const [showVideo, setShowVideo] = useState(false);
+
+  const handleStartGame = () => {
     if (!activeRoom) return;
     setIsStarting(true);
     audioManager.playClick();
     Haptics.click();
+    setShowVideo(true);
+  };
+
+  const proceedWithCountdown = async () => {
+    if (!activeRoom) return;
+    setShowVideo(false);
 
     try {
       const matchDuration = activeRoom.duration_minutes || durationMinutes;
@@ -451,6 +459,36 @@ export const HostLobby: React.FC<HostLobbyProps> = ({
           </button>
         </div>
       )}
+
+      {/* Opening Video Overlay */}
+      <AnimatePresence>
+        {showVideo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
+          >
+            <video
+              src="/opening.mp4"
+              autoPlay
+              playsInline
+              onEnded={proceedWithCountdown}
+              onError={(e) => {
+                console.error('Video error, skipping', e);
+                proceedWithCountdown();
+              }}
+              className="w-full h-full object-cover"
+            />
+            <button 
+              onClick={proceedWithCountdown}
+              className="absolute top-6 right-6 px-4 py-2 bg-slate-900/50 text-white text-xs font-bold rounded-xl backdrop-blur-sm border border-white/20 hover:bg-slate-800 transition"
+            >
+              Lewati Video (Skip)
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Synchronized 3-2-1 Countdown Overlay */}
       <CountdownOverlay count={countdown} />
