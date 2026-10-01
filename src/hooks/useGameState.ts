@@ -338,8 +338,15 @@ export function useGameState() {
         points: q.points,
         difficulty: q.difficulty,
       }));
-      await supabase.from('quiz_questions').insert(payload);
-    } catch (e) {
+      const { data, error } = await supabase.from('quiz_questions').insert(payload);
+      if (error) {
+        alert("Gagal menyimpan ke Supabase: " + error.message);
+        console.error("Supabase Error:", error);
+      } else {
+        alert("Berhasil! Silakan refresh (F5) halaman Anda.");
+      }
+    } catch (e: any) {
+      alert("Error saat mereset: " + (e.message || String(e)));
       console.error("Failed to reset questions in Supabase", e);
     }
   }, []);
