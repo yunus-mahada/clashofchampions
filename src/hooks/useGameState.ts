@@ -11,6 +11,37 @@ export function useGameState() {
   const [data, setData] = useState<PersistedGameData>(() => Storage.load());
   const [questions, setQuestions] = useState<Question[]>(() => Storage.loadQuestions());
   const [screen, setScreen] = useState<GameState>('menu');
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const { data: dbQuestions, error } = await supabase
+          .from('quiz_questions')
+          .select('*')
+          .order('id', { ascending: true });
+          
+        if (!error && dbQuestions && dbQuestions.length > 0) {
+          const formattedQuestions: Question[] = dbQuestions.map((q: any) => ({
+            id: q.id,
+            category: q.category as CategoryId,
+            type: q.type,
+            question: q.question,
+            arabic: q.arabic,
+            options: q.options,
+            correctAnswer: q.correct_answer,
+            explanation: q.explanation,
+            points: q.points,
+            difficulty: q.difficulty,
+          }));
+          setQuestions(formattedQuestions);
+        }
+      } catch (e) {
+        console.error("Failed to fetch questions from Supabase", e);
+      }
+    };
+    
+    fetchQuestions();
+  }, []);
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(null);
   const [currentQuestionId, setCurrentQuestionId] = useState<number | null>(null);
 
@@ -243,19 +274,74 @@ export function useGameState() {
     });
   }, []);
 
-  const updateQuestion = useCallback((updated: Question) => {
+  const updateQuestion = useCallback(async (updated: Question) => {
     const nextList = Storage.saveSingleQuestion(updated);
     setQuestions(nextList);
+
+    try {
+      const payload = {
+        id: updated.id,
+        category: updated.category,
+        type: updated.type,
+        question: updated.question,
+        arabic: updated.arabic,
+        options: updated.options,
+        correct_answer: updated.correctAnswer,
+        explanation: updated.explanation,
+        points: updated.points,
+        difficulty: updated.difficulty,
+      };
+      
+      const { data: existing } = await supabase
+        .from('quiz_questions')
+        .select('id')
+        .eq('id', updated.id)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase.from('quiz_questions').update(payload).eq('id', updated.id);
+      } else {
+        await supabase.from('quiz_questions').insert([payload]);
+      }
+    } catch (e) {
+      console.error("Failed to sync question update to Supabase", e);
+    }
   }, []);
 
-  const deleteQuestion = useCallback((id: number) => {
+  const deleteQuestion = useCallback(async (id: number) => {
     const nextList = Storage.deleteQuestion(id);
     setQuestions(nextList);
+
+    try {
+      await supabase.from('quiz_questions').delete().eq('id', id);
+    } catch (e) {
+      console.error("Failed to delete question from Supabase", e);
+    }
   }, []);
 
-  const resetQuestionsToDefault = useCallback(() => {
+  const resetQuestionsToDefault = useCallback(async () => {
     const defaultList = Storage.resetQuestionsToDefault();
     setQuestions(defaultList);
+
+    try {
+      await supabase.from('quiz_questions').delete().neq('id', 0);
+      
+      const payload = defaultList.map(q => ({
+        id: q.id,
+        category: q.category,
+        type: q.type,
+        question: q.question,
+        arabic: q.arabic,
+        options: q.options,
+        correct_answer: q.correctAnswer,
+        explanation: q.explanation,
+        points: q.points,
+        difficulty: q.difficulty,
+      }));
+      await supabase.from('quiz_questions').insert(payload);
+    } catch (e) {
+      console.error("Failed to reset questions in Supabase", e);
+    }
   }, []);
 
   const openQuestionManager = useCallback(() => {
