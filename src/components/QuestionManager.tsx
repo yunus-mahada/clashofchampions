@@ -255,7 +255,7 @@ export const QuestionManager: React.FC<QuestionManagerProps> = ({
                 : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
             }`}
           >
-            Semua (60)
+            Semua ({questions.length})
           </button>
           {CATEGORIES.map((c) => (
             <button
