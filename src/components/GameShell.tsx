@@ -51,6 +51,7 @@ export const GameShell: React.FC = () => {
     handlePlayerJoined,
     handlePlayerStartGame,
     handlePlayerFinishGame,
+    resumeMultiplayer,
     leaveMultiplayer,
     startNewGame,
     continueGame,
@@ -210,8 +211,12 @@ export const GameShell: React.FC = () => {
         {/* Multiplayer Live Room Screens */}
         {screen === 'multiplayer-menu' && (
           <MultiplayerMenu
+            activeRoom={multiplayerRoom}
+            isHost={!multiplayerPlayer && !!multiplayerRoom}
+            isPlayer={!!multiplayerPlayer && !!multiplayerRoom}
             onHostRoom={startHostLobby}
             onJoinRoom={openPlayerJoin}
+            onResumeRoom={resumeMultiplayer}
             onBack={leaveMultiplayer}
           />
         )}

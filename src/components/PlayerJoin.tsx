@@ -6,6 +6,7 @@ import { QuizRoom, QuizPlayer } from '../utils/supabase';
 import { audioManager } from '../game/AudioManager';
 import { Haptics } from '../utils/haptics';
 import { multiplayerService } from '../services/multiplayerService';
+import { animals } from '../utils/avatars';
 
 interface PlayerJoinProps {
   onJoinSuccess: (room: QuizRoom, player: QuizPlayer) => void;
@@ -18,8 +19,8 @@ export const PlayerJoin: React.FC<PlayerJoinProps> = ({ onJoinSuccess, onBack })
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const avatars = ['🦁', '🦅', '🌟', '🏹', '⚔️', '⚡', '🌙', '🕌'];
-  const [selectedAvatar, setSelectedAvatar] = useState('🌟');
+  const avatars = animals.slice(0, 16); // Ambil 16 hewan pertama untuk pilihan
+  const [selectedAvatar, setSelectedAvatar] = useState(avatars[0]);
 
   useEffect(() => {
     const session = localStorage.getItem('mahada_player_session');

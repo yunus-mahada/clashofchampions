@@ -430,6 +430,23 @@ export function useGameState() {
     navigateTo('player-live-game');
   }, [navigateTo]);
 
+  const resumeMultiplayer = useCallback(() => {
+    audioManager.playClick();
+    Haptics.click();
+    if (multiplayerRoom) {
+      if (multiplayerPlayer) {
+        // Player resume
+        if (multiplayerRoom.status === 'waiting') navigateTo('player-lobby');
+        else if (multiplayerRoom.status === 'playing') navigateTo('player-live-game');
+        else navigateTo('player-live-finish');
+      } else {
+        // Host resume
+        if (multiplayerRoom.status === 'waiting') navigateTo('host-lobby');
+        else navigateTo('host-scoreboard');
+      }
+    }
+  }, [multiplayerRoom, multiplayerPlayer, navigateTo]);
+
   const handlePlayerFinishGame = useCallback(
     (finalScore: number, correctCount: number, wrongCount: number) => {
       setMultiplayerFinalResult({ finalScore, correctCount, wrongCount });
@@ -718,6 +735,7 @@ export function useGameState() {
     handlePlayerJoined,
     handlePlayerStartGame,
     handlePlayerFinishGame,
+    resumeMultiplayer,
     leaveMultiplayer,
     startNewGame,
     continueGame,

@@ -162,10 +162,7 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
         const alreadyAnsweredCount = count || 0;
 
         // Base points based on order: 1st gets 10, 2nd gets 9, etc.
-        const basePoints = Math.max(1, currentTotal - alreadyAnsweredCount);
-        // Fractional speed bonus just to act as tie-breaker for same position
-        const speedFraction = Math.max(0, 60 - timeTaken) / 1000; 
-        pointsEarned = basePoints + speedFraction;
+        pointsEarned = Math.max(1, currentTotal - alreadyAnsweredCount);
       }
     } catch {
       if (isCorrect) {
@@ -269,6 +266,17 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
           <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 max-w-sm mx-auto w-full">
             {roomQuestions.map((q, idx) => {
               const isAnsweredQ = answeredIds.includes(q.id);
+              
+              const getCategoryColor = (category: string) => {
+                switch(category) {
+                  case 'alfatihah': return 'from-orange-500/60 to-orange-700/60 border-orange-500/40 shadow-orange-500/10';
+                  case 'shalat': return 'from-sky-400/60 to-sky-600/60 border-sky-500/40 shadow-sky-500/10';
+                  case 'kisah': return 'from-emerald-400/60 to-emerald-600/60 border-emerald-500/40 shadow-emerald-500/10';
+                  case 'umum': return 'from-purple-400/60 to-purple-600/60 border-purple-500/40 shadow-purple-500/10';
+                  default: return 'from-slate-700/60 to-slate-800/60 border-slate-500/40';
+                }
+              };
+
               return (
                 <button
                   key={q.id}
@@ -281,7 +289,7 @@ export const PlayerLiveGame: React.FC<PlayerLiveGameProps> = ({
                   className={`aspect-square rounded-2xl border text-center flex flex-col items-center justify-center transition-all ${
                     isAnsweredQ
                       ? 'bg-slate-800/50 border-slate-750 text-slate-600 cursor-not-allowed opacity-40'
-                      : 'bg-slate-900 border-amber-500/40 hover:bg-slate-800 active:scale-95 shadow-md shadow-amber-500/10'
+                      : `bg-gradient-to-br ${getCategoryColor(q.category)} hover:opacity-90 active:scale-95 shadow-md`
                   }`}
                 >
                   <span className={`text-2xl font-black ${isAnsweredQ ? 'text-slate-600' : 'text-slate-200'}`}>

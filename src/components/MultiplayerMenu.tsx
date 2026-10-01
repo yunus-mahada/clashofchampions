@@ -1,20 +1,29 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Users, Trophy, Play, Smartphone, Database, Sparkles, ShieldCheck } from 'lucide-react';
+import { Users, Trophy, Play, Smartphone, Database, Sparkles, ShieldCheck, PlayCircle } from 'lucide-react';
 import { BackButton } from './BackButton';
 import { SqlSetupModal } from './SqlSetupModal';
 import { audioManager } from '../game/AudioManager';
 import { Haptics } from '../utils/haptics';
+import { QuizRoom } from '../utils/supabase';
 
 interface MultiplayerMenuProps {
+  activeRoom?: QuizRoom | null;
+  isHost?: boolean;
+  isPlayer?: boolean;
   onHostRoom: () => void;
   onJoinRoom: () => void;
+  onResumeRoom?: () => void;
   onBack: () => void;
 }
 
 export const MultiplayerMenu: React.FC<MultiplayerMenuProps> = ({
+  activeRoom,
+  isHost,
+  isPlayer,
   onHostRoom,
   onJoinRoom,
+  onResumeRoom,
   onBack,
 }) => {
   const [showSqlModal, setShowSqlModal] = useState(false);
@@ -67,6 +76,36 @@ export const MultiplayerMenu: React.FC<MultiplayerMenuProps> = ({
 
       {/* 2 Primary Modes: Host vs Player */}
       <div className="flex flex-col gap-3.5 w-full my-auto">
+        {activeRoom && (
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              if (onResumeRoom) onResumeRoom();
+            }}
+            className="flex items-center justify-between p-4 rounded-3xl bg-gradient-to-br from-indigo-500/20 via-purple-600/10 to-slate-900 border-2 border-indigo-500/40 hover:border-indigo-400 active:bg-indigo-500/30 shadow-xl shadow-indigo-500/10 text-left transition group relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-[url('/img/noise.png')] opacity-20 mix-blend-overlay"></div>
+            <div className="flex items-center gap-3.5 relative z-10">
+              <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-500 text-white font-bold shrink-0 shadow-md shadow-indigo-500/30">
+                <PlayCircle className="w-6 h-6 animate-pulse" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-black text-slate-100 group-hover:text-indigo-300 transition-colors">
+                    Lanjutkan Room Aktif
+                  </h3>
+                  <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    {isHost ? 'Host' : isPlayer ? 'Peserta' : ''}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5 leading-snug">
+                  Kembali ke Room <strong className="text-indigo-300 font-mono">{activeRoom.room_code}</strong> yang sedang berlangsung.
+                </p>
+              </div>
+            </div>
+          </motion.button>
+        )}
+
         {/* Host Option */}
         <motion.button
           whileTap={{ scale: 0.98 }}
