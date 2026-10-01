@@ -172,7 +172,7 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
   };
 
   return (
-    <div className="flex-1 w-full max-w-4xl mx-auto flex flex-col justify-between p-4 sm:p-6 overflow-y-auto no-scrollbar relative z-10">
+    <div className="flex-1 w-full max-w-6xl mx-auto flex flex-col p-4 sm:p-5 overflow-hidden relative z-10">
       {/* Top Header */}
       <div className="flex items-center justify-between pb-3 border-b border-slate-800">
         <BackButton onClick={onExit} label="Keluar" size="sm" />
@@ -258,233 +258,182 @@ export const HostScoreboard: React.FC<HostScoreboardProps> = ({ room, allQuestio
         )}
       </AnimatePresence>
 
-      {/* Overview Stat Ribbon */}
-      <div className="flex items-center justify-between my-2.5 px-4 py-2.5 rounded-2xl bg-slate-900/80 border border-slate-800 text-xs">
-        <div className="flex items-center gap-2 text-slate-300">
-          <span className="font-semibold">Status Penyelesaian:</span>
-          <span className="font-mono font-bold text-amber-300">
-            {finishedCount} / {players.length} Pemain Selesai
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {!isFinished ? (
-            <button
-              onClick={handleFinishMatch}
-              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition active:scale-95 shadow-md shadow-amber-500/20"
-            >
-              {allFinished ? '🏆 TAMPILKAN PODIUM JUARA' : 'Selesaikan Sekarang'}
-            </button>
-          ) : (
-            <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
-              <Check className="w-4 h-4 stroke-[3]" /> Hasil Final Terkunci
+      {/* Main Content: 2 Columns on Large Screens */}
+      <div className="flex flex-col lg:flex-row gap-5 mt-3 flex-1 min-h-0 overflow-hidden">
+        
+        {/* LEFT COLUMN: LEADERBOARD TOP 1-10 */}
+        <div className="w-full lg:w-2/5 flex flex-col min-h-0">
+          <div className="flex items-center justify-between mb-2 shrink-0">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-1">
+              Top 10 Leaderboard:
             </span>
-          )}
-        </div>
-      </div>
-
-      {/* Podium for Top 3 (Clash of Champions Style) */}
-      {top3.length > 0 && (
-        <div className="grid grid-cols-3 gap-2.5 sm:gap-4 my-2 items-end">
-          {/* Rank 2 (Silver) */}
-          {top3[1] ? (
-            <motion.div
-              layout
-              className="flex flex-col items-center p-3 rounded-2xl bg-gradient-to-t from-slate-900 via-slate-850 to-slate-800 border-2 border-slate-400/50 text-center shadow-xl"
-            >
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-300 text-slate-950 font-black text-sm mb-1.5 shadow-md">
-                2
-              </div>
-              <span className="text-xs sm:text-sm font-black text-slate-100 truncate w-full">
-                {top3[1].player_name}
-              </span>
-              <span className="text-base sm:text-lg font-black font-mono text-slate-300 mt-1">
-                {formatScore(top3[1].score)} <span className="text-xs font-normal text-slate-400">PT</span>
-              </span>
-              <span className="text-[10px] text-emerald-400 font-bold">
-                {top3[1].correct_count} Benar
-              </span>
-              {top3[1].is_finished && (
-                <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold mt-1">
-                  Selesai ✓
-                </span>
-              )}
-            </motion.div>
-          ) : (
-            <div />
-          )}
-
-          {/* Rank 1 (Gold Champion) */}
-          {top3[0] && (
-            <motion.div
-              layout
-              className="flex flex-col items-center p-4 rounded-3xl bg-gradient-to-t from-amber-950/60 via-amber-900/30 to-amber-800/40 border-2 border-amber-400 text-center shadow-2xl scale-105 z-10 relative"
-            >
-              <Crown className="w-6 h-6 text-amber-400 animate-bounce absolute -top-3" />
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 font-black text-lg mb-1.5 shadow-lg shadow-amber-500/40">
-                1
-              </div>
-              <span className="text-sm sm:text-base font-black text-amber-200 truncate w-full">
-                {top3[0].player_name}
-              </span>
-              <span className="text-xl sm:text-2xl font-black font-mono text-amber-300 mt-1">
-                {formatScore(top3[0].score)} <span className="text-xs font-normal text-amber-400/80">PT</span>
-              </span>
-              <span className="text-xs text-emerald-400 font-extrabold">
-                {top3[0].correct_count} Benar
-              </span>
-              {top3[0].is_finished ? (
-                <span className="text-[10px] uppercase px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950 font-black mt-1">
-                  Selesai Juara! 🏆
-                </span>
-              ) : (
-                <span className="text-[10px] text-amber-300 animate-pulse mt-1">
-                  Sedang Menjawab...
-                </span>
-              )}
-            </motion.div>
-          )}
-
-          {/* Rank 3 (Bronze) */}
-          {top3[2] ? (
-            <motion.div
-              layout
-              className="flex flex-col items-center p-3 rounded-2xl bg-gradient-to-t from-slate-900 via-slate-850 to-slate-800 border-2 border-amber-700/50 text-center shadow-xl"
-            >
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-700 text-white font-black text-sm mb-1.5 shadow-md">
-                3
-              </div>
-              <span className="text-xs sm:text-sm font-black text-slate-100 truncate w-full">
-                {top3[2].player_name}
-              </span>
-              <span className="text-base sm:text-lg font-black font-mono text-amber-400 mt-1">
-                {formatScore(top3[2].score)} <span className="text-xs font-normal text-amber-500/80">PT</span>
-              </span>
-              <span className="text-[10px] text-emerald-400 font-bold">
-                {top3[2].correct_count} Benar
-              </span>
-              {top3[2].is_finished && (
-                <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold mt-1">
-                  Selesai ✓
-                </span>
-              )}
-            </motion.div>
-          ) : (
-            <div />
-          )}
-        </div>
-      )}
-
-      {/* Full Leaderboard List */}
-      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-2 mt-3 pb-6">
-        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
-          Daftar Peringkat Lengkap:
-        </span>
-
-        {players.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">
-            Menunggu data peserta...
           </div>
-        ) : (
-          players.map((p, idx) => {
-            const progressPct = Math.round(
-              (p.current_question / (room.total_questions || 15)) * 100
-            );
 
-            return (
-              <motion.div
-                key={p.id}
-                layout
-                className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
-                  idx === 0
-                    ? 'bg-amber-950/40 border-amber-500/60 shadow-md'
-                    : idx === 1
-                    ? 'bg-slate-900/90 border-slate-700'
-                    : idx === 2
-                    ? 'bg-slate-900/80 border-amber-800/40'
-                    : 'bg-slate-900/60 border-slate-800/80'
-                }`}
-              >
-                {/* Left: Rank & Name */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <span
-                    className={`flex items-center justify-center w-7 h-7 rounded-xl font-mono text-xs font-black shrink-0 ${
-                      idx === 0
-                        ? 'bg-amber-400 text-slate-950'
-                        : idx === 1
-                        ? 'bg-slate-300 text-slate-950'
-                        : idx === 2
-                        ? 'bg-amber-700 text-white'
-                        : 'bg-slate-800 text-slate-400'
-                    }`}
+          <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-2 pb-4 pr-1">
+            {/* Podium for Top 3 */}
+            {top3.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mb-2 items-end shrink-0">
+                {/* Rank 2 (Silver) */}
+                {top3[1] ? (
+                  <motion.div
+                    layout
+                    className="flex flex-col items-center p-2 rounded-2xl bg-gradient-to-t from-slate-900 via-slate-850 to-slate-800 border-2 border-slate-400/50 text-center shadow-md"
                   >
-                    {idx + 1}
-                  </span>
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-300 text-slate-950 font-black text-xs mb-1">2</div>
+                    <span className="text-[11px] font-black text-slate-100 truncate w-full">{top3[1].player_name}</span>
+                    <span className="text-sm font-black font-mono text-slate-300">{formatScore(top3[1].score)}</span>
+                  </motion.div>
+                ) : <div />}
 
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-bold text-slate-100 truncate">
+                {/* Rank 1 (Gold Champion) */}
+                {top3[0] && (
+                  <motion.div
+                    layout
+                    className="flex flex-col items-center p-3 rounded-2xl bg-gradient-to-t from-amber-950/60 via-amber-900/30 to-amber-800/40 border-2 border-amber-400 text-center shadow-lg z-10 relative"
+                  >
+                    <Crown className="w-5 h-5 text-amber-400 animate-bounce absolute -top-2.5" />
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 font-black text-sm mb-1 shadow-md shadow-amber-500/40">1</div>
+                    <span className="text-xs font-black text-amber-200 truncate w-full">{top3[0].player_name}</span>
+                    <span className="text-base font-black font-mono text-amber-300">{formatScore(top3[0].score)}</span>
+                  </motion.div>
+                )}
+
+                {/* Rank 3 (Bronze) */}
+                {top3[2] ? (
+                  <motion.div
+                    layout
+                    className="flex flex-col items-center p-2 rounded-2xl bg-gradient-to-t from-slate-900 via-slate-850 to-slate-800 border-2 border-amber-700/50 text-center shadow-md"
+                  >
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-amber-700 text-white font-black text-xs mb-1">3</div>
+                    <span className="text-[11px] font-black text-slate-100 truncate w-full">{top3[2].player_name}</span>
+                    <span className="text-sm font-black font-mono text-amber-400">{formatScore(top3[2].score)}</span>
+                  </motion.div>
+                ) : <div />}
+              </div>
+            )}
+
+            {/* List for Top 4 - 10 */}
+            {players.slice(3, 10).map((p, idx) => {
+              const rank = idx + 4;
+              return (
+                <motion.div
+                  key={p.id}
+                  layout
+                  className="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/80"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-slate-800 text-slate-400 font-mono text-xs font-black shrink-0">
+                      {rank}
+                    </span>
+                    <span className="text-xs font-bold text-slate-200 truncate">
                       {p.player_name}
                     </span>
-                    <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                      <span className="text-emerald-400 font-semibold">
-                        {p.correct_count} Benar
-                      </span>
-                      <span>·</span>
-                      <span className="text-rose-400">
-                        {p.wrong_count} Salah
-                      </span>
-                      <span>·</span>
-                      <span>
-                        Soal {p.current_question}/{room.total_questions || 15}
-                      </span>
-                    </div>
                   </div>
-                </div>
-
-                {/* Right: Score & Status */}
-                <div className="flex flex-col items-end shrink-0 pl-2">
-                  <span className="text-base font-black font-mono text-amber-300">
-                    {formatScore(p.score)} <span className="text-xs font-normal text-slate-400">PT</span>
+                  <span className="text-xs font-black font-mono text-amber-300 shrink-0">
+                    {formatScore(p.score)} PT
                   </span>
-                  {p.is_finished ? (
-                    <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
-                      <Check className="w-3 h-3 stroke-[3]" /> Selesai
-                    </span>
-                  ) : (
-                    <span className="text-[10px] text-slate-500 font-medium">
-                      {progressPct}%
-                    </span>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })
-        )}
-      </div>
+                </motion.div>
+              );
+            })}
+            
+            {players.length === 0 && (
+               <div className="p-8 text-center text-slate-500 text-xs">Menunggu data peserta...</div>
+            )}
+          </div>
+        </div>
 
-      {/* Per-Question Report Trigger Row */}
-      <div className="mt-2 pt-4 border-t border-slate-800 shrink-0">
-        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1 block mb-2">
-          Laporan Jawaban Per Soal:
-        </span>
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 px-1">
-          {roomQuestions.map((q, idx) => {
-            const isAllAnswered = players.length > 0 && answeredCounts[q.id] >= players.length;
-            return (
-              <button
-                key={q.id}
-                onClick={() => openReport(q.id, idx + 1)}
-                className={`flex-shrink-0 w-10 h-10 rounded-xl border flex flex-col items-center justify-center active:scale-95 transition ${
-                  isAllAnswered 
-                    ? 'bg-amber-400 border-amber-300 shadow-md shadow-amber-500/20' 
-                    : 'bg-slate-900 border-slate-750 hover:bg-slate-800 hover:border-emerald-500/50'
-                }`}
-                title={`Lihat Siapa yang Menjawab Soal No. ${idx + 1}`}
-              >
-                <span className={`text-xs font-black ${isAllAnswered ? 'text-slate-900' : 'text-slate-300'}`}>{idx + 1}</span>
-              </button>
-            );
-          })}
+        {/* RIGHT COLUMN: DETAIL TABLE & ACTIONS */}
+        <div className="w-full lg:w-3/5 flex flex-col min-h-0 gap-3">
+          
+          {/* Overview Stat Ribbon */}
+          <div className="flex items-center justify-between px-3 py-2 rounded-2xl bg-slate-900/80 border border-slate-800 text-[11px] shrink-0">
+            <div className="flex items-center gap-2 text-slate-300">
+              <span className="font-semibold">Selesai:</span>
+              <span className="font-mono font-bold text-amber-300">
+                {finishedCount} / {players.length} Pemain
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {!isFinished ? (
+                <button
+                  onClick={handleFinishMatch}
+                  className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black transition active:scale-95 shadow-md shadow-amber-500/20"
+                >
+                  {allFinished ? '🏆 PODIUM JUARA' : 'Selesaikan Sekarang'}
+                </button>
+              ) : (
+                <span className="font-bold text-emerald-400 flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" /> Hasil Terkunci
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Table: Perolehan Detail */}
+          <div className="flex-1 flex flex-col bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden min-h-0">
+            <div className="px-3 py-2.5 bg-slate-900 border-b border-slate-800 flex text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">
+              <div className="w-1/3 truncate px-1">Nama Peserta</div>
+              <div className="w-2/3 flex items-center justify-between px-1">
+                <div className="w-1/4 text-center">Benar</div>
+                <div className="w-1/4 text-center">Salah</div>
+                <div className="w-1/4 text-center">Sisa</div>
+                <div className="w-1/4 text-right">Total PT</div>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-1.5">
+              {players.map((p) => {
+                 const answered = p.correct_count + p.wrong_count;
+                 const remaining = (room.total_questions || 15) - answered;
+                 return (
+                   <div key={p.id} className="flex items-center p-2 rounded-xl bg-slate-800/40 border border-slate-700/50 text-xs hover:bg-slate-800/80 transition-colors">
+                     <div className="w-1/3 font-semibold text-slate-200 truncate px-1" title={p.player_name}>
+                       {p.player_name}
+                     </div>
+                     <div className="w-2/3 flex items-center justify-between px-1">
+                       <div className="w-1/4 text-center font-bold text-emerald-400">{p.correct_count}</div>
+                       <div className="w-1/4 text-center font-bold text-rose-400">{p.wrong_count}</div>
+                       <div className="w-1/4 text-center font-bold text-slate-300">{remaining}</div>
+                       <div className="w-1/4 text-right font-bold font-mono text-amber-400 truncate">
+                         {formatScore(p.score)}
+                       </div>
+                     </div>
+                   </div>
+                 );
+              })}
+              {players.length === 0 && (
+                <div className="text-center text-slate-500 text-xs py-8">Belum ada peserta</div>
+              )}
+            </div>
+          </div>
+
+          {/* Per-Question Report Trigger Row */}
+          <div className="pt-2 border-t border-slate-800 shrink-0">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1 block mb-1.5">
+              Laporan Jawaban Per Soal:
+            </span>
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 px-1">
+              {roomQuestions.map((q, idx) => {
+                const isAllAnswered = players.length > 0 && answeredCounts[q.id] >= players.length;
+                return (
+                  <button
+                    key={q.id}
+                    onClick={() => openReport(q.id, idx + 1)}
+                    className={`flex-shrink-0 w-8 h-8 rounded-lg border flex flex-col items-center justify-center active:scale-95 transition ${
+                      isAllAnswered 
+                        ? 'bg-amber-400 border-amber-300 shadow-md shadow-amber-500/20' 
+                        : 'bg-slate-900 border-slate-750 hover:bg-slate-800 hover:border-emerald-500/50'
+                    }`}
+                    title={`Lihat Siapa yang Menjawab Soal No. ${idx + 1}`}
+                  >
+                    <span className={`text-[10px] font-black ${isAllAnswered ? 'text-slate-900' : 'text-slate-300'}`}>{idx + 1}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          
         </div>
       </div>
 
