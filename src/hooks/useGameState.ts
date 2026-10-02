@@ -52,6 +52,7 @@ export function useGameState() {
             difficulty: q.difficulty,
           }));
           setQuestions(formattedQuestions);
+          Storage.saveQuestions(formattedQuestions);
         }
       } catch (e) {
         console.error("Failed to fetch questions from Supabase", e);
@@ -308,8 +309,17 @@ export function useGameState() {
   }, []);
 
   const updateQuestion = useCallback(async (updated: Question) => {
-    const nextList = Storage.saveSingleQuestion(updated);
-    setQuestions(nextList);
+    setQuestions((prevQuestions) => {
+      const nextList = [...prevQuestions];
+      const index = nextList.findIndex((q) => q.id === updated.id);
+      if (index >= 0) {
+        nextList[index] = updated;
+      } else {
+        nextList.push(updated);
+      }
+      Storage.saveQuestions(nextList);
+      return nextList;
+    });
 
     try {
       const payload = {
@@ -342,8 +352,11 @@ export function useGameState() {
   }, []);
 
   const deleteQuestion = useCallback(async (id: number) => {
-    const nextList = Storage.deleteQuestion(id);
-    setQuestions(nextList);
+    setQuestions((prevQuestions) => {
+      const nextList = prevQuestions.filter((q) => q.id !== id);
+      Storage.saveQuestions(nextList);
+      return nextList;
+    });
 
     try {
       await supabase.from('quiz_questions').delete().eq('id', id);
