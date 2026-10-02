@@ -344,7 +344,7 @@ export function useGameState() {
         category: updated.category,
         type: updated.type,
         question: updated.question,
-        arabic: updated.arabic,
+        arabic: updated.arabic || null,
         options: updated.options,
         correct_answer: updated.correctAnswer,
         explanation: updated.explanation,
