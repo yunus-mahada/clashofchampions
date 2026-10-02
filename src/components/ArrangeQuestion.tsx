@@ -15,12 +15,23 @@ export const ArrangeQuestion: React.FC<ArrangeQuestionProps> = ({
   disabled,
   onSubmit,
 }) => {
+  // Helper to properly shuffle the pieces
+  const shufflePieces = (pieces: string[]) => {
+    if (pieces.length <= 1) return [...pieces];
+    const shuffled = [...pieces];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    // Prevent the shuffled array from accidentally matching the correct answer
+    if (shuffled.join(',') === pieces.join(',')) {
+      shuffled.reverse();
+    }
+    return shuffled;
+  };
+
   // Start with shuffled copy
-  const [items, setItems] = useState<string[]>(() => {
-    const copy = [...initialPieces];
-    // Deterministic slight shuffle if initial matches
-    return copy.reverse();
-  });
+  const [items, setItems] = useState<string[]>(() => shufflePieces(initialPieces));
 
   const moveUp = (index: number) => {
     if (disabled || index === 0) return;
@@ -48,7 +59,7 @@ export const ArrangeQuestion: React.FC<ArrangeQuestionProps> = ({
     if (disabled) return;
     audioManager.playClick();
     Haptics.click();
-    setItems([...initialPieces].reverse());
+    setItems(shufflePieces(initialPieces));
   };
 
   const handleCheck = () => {

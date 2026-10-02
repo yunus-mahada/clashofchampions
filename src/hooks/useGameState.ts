@@ -60,6 +60,23 @@ export function useGameState() {
     };
     
     fetchQuestions();
+
+    // Subscribe to realtime updates for quiz_questions
+    const channel = supabase
+      .channel('public:quiz_questions')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'quiz_questions' },
+        (payload) => {
+          // Re-fetch all questions to keep state and storage synced perfectly
+          fetchQuestions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | null>(null);
   const [currentQuestionId, setCurrentQuestionId] = useState<number | null>(null);
