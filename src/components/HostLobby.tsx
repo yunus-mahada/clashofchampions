@@ -152,6 +152,17 @@ export const HostLobby: React.FC<HostLobbyProps> = ({
 
   const [showVideo, setShowVideo] = useState(false);
   const proceedCalledRef = useRef(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (showVideo && videoRef.current) {
+      videoRef.current.play().catch((err) => {
+        console.error("Autoplay prevented:", err);
+        // Fallback if browser absolutely blocks video autoplay even after interaction
+        proceedWithCountdown();
+      });
+    }
+  }, [showVideo]);
 
   const handleStartGame = () => {
     if (!activeRoom) return;
@@ -472,8 +483,8 @@ export const HostLobby: React.FC<HostLobbyProps> = ({
             className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
           >
             <video
+              ref={videoRef}
               src="/opening.mp4"
-              autoPlay
               playsInline
               onEnded={proceedWithCountdown}
               onError={(e) => {
