@@ -34,6 +34,16 @@ export const MainMenu: React.FC<MainMenuProps> = ({
   const hasProgress = answeredCount > 0;
   const rank = getChampionRank(highScore);
 
+  const handleLockedAction = (action: () => void) => {
+    const code = window.prompt('Masukkan kode akses:');
+    if (code === '060920') {
+      action();
+    } else if (code !== null) {
+      window.alert('Kode salah!');
+    }
+  };
+
+
   return (
     <div className="flex-1 w-full max-w-md mx-auto flex flex-col justify-between items-center px-4 py-6 overflow-y-auto no-scrollbar relative z-10">
       {/* Top Bar with PWA install & Sound toggle */}
@@ -57,7 +67,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
             onClick={() => {
               audioManager.playClick();
               Haptics.click();
-              onOpenSettings();
+              handleLockedAction(onOpenSettings);
             }}
             className="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-900/80 border border-slate-750 text-slate-300 hover:text-white active:scale-95"
             aria-label="Pengaturan"
@@ -170,7 +180,11 @@ export const MainMenu: React.FC<MainMenuProps> = ({
         {hasProgress && (
           <motion.button
             whileTap={{ scale: 0.98 }}
-            onClick={onContinue}
+            onClick={() => {
+              audioManager.playClick();
+              Haptics.click();
+              handleLockedAction(onContinue);
+            }}
             className="w-full flex flex-col items-center justify-center py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 shadow-xl shadow-emerald-500/20 transition-all"
           >
             <div className="flex items-center gap-2 font-black text-sm tracking-wide">
@@ -185,7 +199,11 @@ export const MainMenu: React.FC<MainMenuProps> = ({
 
         <motion.button
           whileTap={{ scale: 0.98 }}
-          onClick={onStartNew}
+          onClick={() => {
+            audioManager.playClick();
+            Haptics.click();
+            handleLockedAction(onStartNew);
+          }}
           className={`w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-black text-sm tracking-wide shadow-xl transition-all ${
             hasProgress
               ? 'border border-slate-700 bg-slate-900/90 hover:bg-slate-800 text-slate-200'
@@ -213,7 +231,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({
             onClick={() => {
               audioManager.playClick();
               Haptics.click();
-              onOpenSettings();
+              handleLockedAction(onOpenSettings);
             }}
             className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 text-xs font-semibold active:scale-95 transition"
           >
